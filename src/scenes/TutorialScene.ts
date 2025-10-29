@@ -171,7 +171,7 @@ export default class TutorialScene extends Phaser.Scene {
 
   preload() {
     this.load.spritesheet('tiles', `assets/tiles.png?cb=${CACHE_BUST}`, { frameWidth: 48, frameHeight: 48 });
-    this.load.tilemapTiledJSON('map', `assets/map.json?cb=${CACHE_BUST}`);
+    this.load.tilemapTiledJSON('scene_1_tutorial', `assets/scene_1_tutorial.json?cb=${CACHE_BUST}`);
   }
 
   create() {
@@ -185,8 +185,8 @@ export default class TutorialScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor('#0b0e13');
 
-    const tm = this.make.tilemap({ key: 'map' });
-    if (!tm) throw new Error('Failed to load assets/map.json');
+    const tm = this.make.tilemap({ key: 'scene_1_tutorial' });
+    if (!tm) throw new Error('Failed to load assets/scene_1_tutorial.json');
 
     const tilesetName = (tm.tilesets && tm.tilesets[0]?.name) || 'main';
     const tileset = tm.addTilesetImage(tilesetName, 'tiles');

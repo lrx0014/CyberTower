@@ -1,0 +1,41 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "/Users/lirenxiang/WorkSpace/github/CyberGame/CyberMagic/public/assets/map.json#sprite": {
+            "scaleInEditor": 1
+        },
+        "/Users/lirenxiang/WorkSpace/github/CyberGame/sunny-land/assets/maps/map.json": {
+            "scale": 0.6899048625792812,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 473.25365816287444,
+                "y": 203.65126790776065
+            }
+        },
+        "/Users/lirenxiang/WorkSpace/github/CyberGame/sunny-land/assets/maps/map.json#tileset": {
+            "scaleInDock": 1
+        },
+        "/Users/lirenxiang/WorkSpace/github/CyberGame/sunny-land/assets/maps/tileset.tsx": {
+            "scaleInDock": 1
+        },
+        "maps/scene_1_tutorial.tmx#sprite": {
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "/Users/lirenxiang/WorkSpace/github/CyberTower/public/assets",
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+    ],
+    "project": "tiled.tiled-project",
+    "recentFiles": [
+        "/Users/lirenxiang/WorkSpace/github/CyberGame/sunny-land/assets/maps/map.json"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}
