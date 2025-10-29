@@ -1,4 +1,4 @@
-import type { DoorData, ItemData, MonsterStats, TileKey, TileType } from './types';
+import type { DoorData, ItemData, MonsterStats, TileKey, TileType } from '../../global/types';
 
 export interface Vec2 {
   x: number;
