@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Cyber Tower Demo</title>
+  <style>
+    html, body { height: 100%; }
+    body { margin: 0; background:#0e0f12; font-family: system-ui, -apple-system, Segoe UI, Roboto, PingFang SC, Helvetica, Arial; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+    #game-root { display:flex; flex-direction:row; gap:12px; padding:12px; box-sizing:border-box; align-items:center; justify-content:center; width:100%; max-width:1200px; min-height:0; height:100vh; max-height:100vh; }
+    #phaser { flex:1 1 auto; display:flex; justify-content:center; align-items:center; min-width:0; min-height:0; height:100%; }
+    #phaser canvas { display:block; max-width:100%; max-height:100%; }
+    #ui { flex:0 0 300px; background:#14161b; color:#e6e7ea; border-radius:12px; padding:12px; box-shadow: 0 4px 20px rgba(0,0,0,.35); max-height:100%; overflow:auto; }
+    .stat { display:flex; justify-content:space-between; margin:4px 0; font-size:14px; }
+    .headline { font-size:18px; font-weight:700; margin-bottom:8px; }
+    .panel { background:#0f1116; border-radius:10px; padding:10px; margin-top:10px; }
+    .btns { display:flex; gap:8px; margin-top:10px; }
+    button { background:#2a2f3a; color:#e6e7ea; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+    button:hover { background:#344056; }
+    .msg { min-height: 56px; white-space:pre-line; font-size:13px; color:#cfd2d8; }
+    .tip { font-size:12px; color:#9aa3b2; margin-top:6px; }
+    @media (max-width: 900px) {
+      #game-root { flex-direction:column; height:auto; max-width: calc(100vw - 24px); }
+      #phaser { width:100%; height:min(70vh, 100vw); }
+      #ui { width:100%; max-width:360px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-root">
+    <div id="phaser"></div>
+    <div id="ui">
+      <div class="headline">Level 1</div>
+      <div class="panel">
+        <div class="headline">Character</div>
+        <div class="stat"><span>Name</span><span id="name">Hero</span></div>
+        <div class="stat"><span>HP</span><span id="hp">-</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="headline">Battle Stats</div>
+        <div class="stat"><span>ATK</span><span id="atk">-</span></div>
+        <div class="stat"><span>DEF</span><span id="def">-</span></div>
+      </div>
+      <div class="panel">
+        <div class="headline">Inventory</div>
+        <div class="stat"><span>Keys</span><span id="keys">-</span></div>
+      </div>
+      <div class="panel">
+        <div class="msg" id="msg">Welcome to Cyber Tower.</div>
+        <div class="btns">
+          <button id="reset">Restart</button>
+          <button id="hint">Hint</button>
+        </div>
+        <div class="tip">This is just a demo.</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
