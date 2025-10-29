@@ -1,4 +1,15 @@
 import Phaser from 'phaser';
+import {
+  DoorEncounterEvent,
+  GameEventHandler,
+  ItemPickupEvent,
+  MonsterEncounterEvent,
+  PlayerMoveAttemptEvent,
+  PlayerMoveBlockedEvent,
+  PlayerMoveCommitEvent,
+  StairsEvent,
+  gameEventBus
+} from '../global/eventBus';
 import { DoorData, ItemData, MonsterStats, PlayerState, TileKey, TileType, UIHooks } from '../global/types';
 
 export const DEFAULT_GAME_WIDTH = 48 * 15 + 24;
@@ -168,6 +179,8 @@ export default class TutorialScene extends Phaser.Scene {
   private monstersLayer?: Phaser.Tilemaps.TilemapLayer;
   private objectsEntityLayer?: Phaser.Tilemaps.TilemapLayer;
   private playerSprite?: Phaser.GameObjects.Sprite;
+  private eventUnsubscribes: Array<() => void> = [];
+  private lastMoveAttempt: { from: { x: number; y: number }; to: { x: number; y: number } } | null = null;
 
   preload() {
     this.load.spritesheet('tiles', `assets/tiles.png?cb=${CACHE_BUST}`, { frameWidth: 48, frameHeight: 48 });
@@ -176,12 +189,15 @@ export default class TutorialScene extends Phaser.Scene {
 
   create() {
     activeScene = this;
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+    const teardown = () => {
       if (activeScene === this) activeScene = null;
-    });
-    this.events.once(Phaser.Scenes.Events.DESTROY, () => {
-      if (activeScene === this) activeScene = null;
-    });
+      this.unregisterEventHandlers();
+      this.lastMoveAttempt = null;
+      gameEventBus.stop();
+    };
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, teardown);
+    this.events.once(Phaser.Scenes.Events.DESTROY, teardown);
 
     this.cameras.main.setBackgroundColor('#0b0e13');
 
@@ -308,6 +324,8 @@ export default class TutorialScene extends Phaser.Scene {
     }
 
     this.renderPlayer();
+    this.registerEventHandlers();
+    gameEventBus.start();
 
     this.input.keyboard.on('keydown', (event: KeyboardEvent) => {
       if (!state) return;
@@ -323,6 +341,25 @@ export default class TutorialScene extends Phaser.Scene {
     this.centerOnPlayer();
   }
 
+  private registerEventHandlers() {
+    this.unregisterEventHandlers();
+    this.lastMoveAttempt = null;
+    this.eventUnsubscribes = [
+      gameEventBus.subscribe('player.move.attempt', this.handlePlayerMoveAttempt),
+      gameEventBus.subscribe('player.move.blocked', this.handlePlayerMoveBlocked),
+      gameEventBus.subscribe('player.move.commit', this.handlePlayerMoveCommit),
+      gameEventBus.subscribe('encounter.door', this.handleDoorEncounter),
+      gameEventBus.subscribe('encounter.item', this.handleItemPickup),
+      gameEventBus.subscribe('encounter.monster', this.handleMonsterEncounter),
+      gameEventBus.subscribe('encounter.stairs', this.handleStairsEvent)
+    ];
+  }
+
+  private unregisterEventHandlers() {
+    this.eventUnsubscribes.forEach((fn) => fn());
+    this.eventUnsubscribes = [];
+  }
+
   private tryMove(dx: number, dy: number) {
     if (!state || !map) return;
     const attemptedFacing = facingFromDelta(dx, dy);
@@ -335,112 +372,18 @@ export default class TutorialScene extends Phaser.Scene {
     }
     const nx = state.px + dx;
     const ny = state.py + dy;
-    if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return;
-    if (map[ny][nx] === TileType.WALL) {
-      postMsg('A wall blocks the way.');
+    const from = { x: state.px, y: state.py };
+    const to = { x: nx, y: ny };
+    if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) {
+      gameEventBus.enqueue({
+        type: 'player.move.blocked',
+        trigger: 'system',
+        payload: { reason: 'bounds', position: to, message: 'Cannot move beyond the map.' }
+      });
       return;
     }
-
-    if (map[ny][nx] === TileType.DOOR) {
-      const door = doorData.get(keyOf(nx, ny));
-      const need = door?.keyCost ?? 1;
-      if (state.keys >= need) {
-        state.keys -= need;
-        map[ny][nx] = TileType.FLOOR;
-        postMsg(`Used ${need} key(s). The door opened.`);
-        updateUI();
-        this.removeTileAt(nx, ny, this.doorsLayer);
-        this.removeTileAt(nx, ny, this.objectsEntityLayer);
-      } else {
-        postMsg(`Need ${need} key(s).`);
-        return;
-      }
-    }
-
-    if (this.objectsEntityLayer && this.objectsEntityLayer.hasTileAt(nx, ny) && map[ny][nx] === TileType.FLOOR) {
-      postMsg('Something blocks the way.');
-      return;
-    }
-
-    if (map[ny][nx] === TileType.MONSTER) {
-      const monster = monsterData.get(keyOf(nx, ny));
-      if (!monster) {
-        map[ny][nx] = TileType.FLOOR;
-        this.removeTileAt(nx, ny, this.monstersLayer);
-        this.removeTileAt(nx, ny, this.objectsEntityLayer);
-      } else {
-        const result = battleCalc(monster);
-        if (!result.canWin) {
-          postMsg(`${monster.name || 'Monster'} is too strong to defeat right now.`);
-          return;
-        }
-        state.hp -= result.hpLoss;
-        map[ny][nx] = TileType.FLOOR;
-        monsterData.delete(keyOf(nx, ny));
-        this.removeTileAt(nx, ny, this.monstersLayer);
-        this.removeTileAt(nx, ny, this.objectsEntityLayer);
-        postMsg(`Fought ${monster.name || 'Monster'} for ${result.rounds} round(s) and lost ${result.hpLoss} HP.`);
-        updateUI();
-      }
-    }
-
-    if (map[ny][nx] === TileType.KEY) {
-      const item = itemData.get(keyOf(nx, ny));
-      const value = item?.value ?? 1;
-      state.keys += value;
-      map[ny][nx] = TileType.FLOOR;
-      itemData.delete(keyOf(nx, ny));
-      postMsg(`Picked up yellow key x${value}.`);
-      updateUI();
-      this.removeTileAt(nx, ny, this.itemsLayer);
-      this.removeTileAt(nx, ny, this.objectsEntityLayer);
-    }
-    if (map[ny][nx] === TileType.HP) {
-      const item = itemData.get(keyOf(nx, ny));
-      const value = item?.value ?? 50;
-      state.hp += value;
-      map[ny][nx] = TileType.FLOOR;
-      itemData.delete(keyOf(nx, ny));
-      postMsg(`HP +${value}`);
-      updateUI();
-      this.removeTileAt(nx, ny, this.itemsLayer);
-      this.removeTileAt(nx, ny, this.objectsEntityLayer);
-    }
-    if (map[ny][nx] === TileType.ATK) {
-      const item = itemData.get(keyOf(nx, ny));
-      const value = item?.value ?? 3;
-      state.atk += value;
-      map[ny][nx] = TileType.FLOOR;
-      itemData.delete(keyOf(nx, ny));
-      postMsg(`ATK +${value}`);
-      updateUI();
-      this.removeTileAt(nx, ny, this.itemsLayer);
-      this.removeTileAt(nx, ny, this.objectsEntityLayer);
-    }
-    if (map[ny][nx] === TileType.DEF) {
-      const item = itemData.get(keyOf(nx, ny));
-      const value = item?.value ?? 3;
-      state.def += value;
-      map[ny][nx] = TileType.FLOOR;
-      itemData.delete(keyOf(nx, ny));
-      postMsg(`DEF +${value}`);
-      updateUI();
-      this.removeTileAt(nx, ny, this.itemsLayer);
-      this.removeTileAt(nx, ny, this.objectsEntityLayer);
-    }
-    if (map[ny][nx] === TileType.STAIRS) {
-      postMsg('Level 1 complete!');
-    }
-
-    selectPlayerFrame(true);
-    state.px = nx;
-    state.py = ny;
-    this.renderPlayer();
-    this.centerOnPlayer();
-
-    if (state.hp <= 0) {
-      postMsg('You fell... click "Restart".');
-    }
+    this.lastMoveAttempt = { from, to };
+    gameEventBus.enqueue({ type: 'player.move.attempt', trigger: 'player', payload: { from, to } });
   }
 
   private removeTileAt(x: number, y: number, layer?: Phaser.Tilemaps.TilemapLayer) {
@@ -449,6 +392,229 @@ export default class TutorialScene extends Phaser.Scene {
       layer.removeTileAt(x, y);
     }
   }
+
+  private handlePlayerMoveAttempt: GameEventHandler<'player.move.attempt'> = async (event: PlayerMoveAttemptEvent) => {
+    if (!state || !map) return;
+    const { from, to } = event.payload;
+    const { x: nx, y: ny } = to;
+    if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) {
+      gameEventBus.enqueue({
+        type: 'player.move.blocked',
+        trigger: 'system',
+        payload: { reason: 'bounds', position: to, message: 'Cannot move beyond the map.' }
+      });
+      return;
+    }
+    const tileType = map[ny][nx];
+    const tileKey = keyOf(nx, ny);
+
+    if (tileType === TileType.WALL) {
+      gameEventBus.enqueue({
+        type: 'player.move.blocked',
+        trigger: 'system',
+        payload: { reason: 'wall', position: to, message: 'A wall blocks the way.' }
+      });
+      return;
+    }
+
+    if (tileType === TileType.DOOR) {
+      gameEventBus.enqueue({
+        type: 'encounter.door',
+        trigger: 'system',
+        payload: { position: to, door: doorData.get(tileKey), tileKey }
+      });
+      return;
+    }
+
+    if (this.objectsEntityLayer?.hasTileAt(nx, ny) && tileType === TileType.FLOOR) {
+      gameEventBus.enqueue({
+        type: 'player.move.blocked',
+        trigger: 'system',
+        payload: { reason: 'entity', position: to, message: 'Something blocks the way.' }
+      });
+      return;
+    }
+
+    if (tileType === TileType.MONSTER) {
+      gameEventBus.enqueue({
+        type: 'encounter.monster',
+        trigger: 'system',
+        payload: { position: to, monster: monsterData.get(tileKey), tileKey }
+      });
+      return;
+    }
+
+    if (tileType === TileType.KEY || tileType === TileType.HP || tileType === TileType.ATK || tileType === TileType.DEF) {
+      gameEventBus.enqueue({
+        type: 'encounter.item',
+        trigger: 'system',
+        payload: { position: to, item: itemData.get(tileKey), tileType, tileKey }
+      });
+      return;
+    }
+
+    if (tileType === TileType.STAIRS) {
+      gameEventBus.enqueue({ type: 'encounter.stairs', trigger: 'system', payload: { position: to } });
+      return;
+    }
+
+    gameEventBus.enqueue({
+      type: 'player.move.commit',
+      trigger: 'system',
+      payload: { from, to, advanceFrame: true }
+    });
+  };
+
+  private handlePlayerMoveBlocked: GameEventHandler<'player.move.blocked'> = async (event: PlayerMoveBlockedEvent) => {
+    if (!state) return;
+    this.lastMoveAttempt = null;
+    if (event.payload.message) {
+      postMsg(event.payload.message);
+    }
+  };
+
+  private handlePlayerMoveCommit: GameEventHandler<'player.move.commit'> = async (event: PlayerMoveCommitEvent) => {
+    if (!state) return;
+    const { to, advanceFrame } = event.payload;
+    if (advanceFrame) {
+      selectPlayerFrame(true);
+    }
+    state.px = to.x;
+    state.py = to.y;
+    this.renderPlayer();
+    this.centerOnPlayer();
+    this.lastMoveAttempt = null;
+    if (state.hp <= 0) {
+      postMsg('You fell... click "Restart".');
+    }
+  };
+
+  private handleDoorEncounter: GameEventHandler<'encounter.door'> = async (event: DoorEncounterEvent) => {
+    if (!state || !map) return;
+    const { door, position, tileKey } = event.payload;
+    const need = door?.keyCost ?? 1;
+    if (state.keys < need) {
+      gameEventBus.enqueue({
+        type: 'player.move.blocked',
+        trigger: 'system',
+        payload: { reason: 'keys', position, message: `Need ${need} key(s).` }
+      });
+      return;
+    }
+    state.keys -= need;
+    map[position.y][position.x] = TileType.FLOOR;
+    doorData.delete(tileKey);
+    postMsg(`Used ${need} key(s). The door opened.`);
+    updateUI();
+    this.removeTileAt(position.x, position.y, this.doorsLayer);
+    this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
+
+    const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
+    gameEventBus.enqueue({
+      type: 'player.move.commit',
+      trigger: 'system',
+      payload: { from, to: position, advanceFrame: true }
+    });
+  };
+
+  private handleItemPickup: GameEventHandler<'encounter.item'> = async (event: ItemPickupEvent) => {
+    if (!state || !map) return;
+    const { item, tileType, position, tileKey } = event.payload;
+    const value = item?.value ?? 1;
+    switch (tileType) {
+      case TileType.KEY:
+        state.keys += value;
+        postMsg(`Picked up yellow key x${value}.`);
+        break;
+      case TileType.HP: {
+        const hpValue = item?.value ?? 50;
+        state.hp += hpValue;
+        postMsg(`HP +${hpValue}`);
+        break;
+      }
+      case TileType.ATK: {
+        const atkValue = item?.value ?? 3;
+        state.atk += atkValue;
+        postMsg(`ATK +${atkValue}`);
+        break;
+      }
+      case TileType.DEF: {
+        const defValue = item?.value ?? 3;
+        state.def += defValue;
+        postMsg(`DEF +${defValue}`);
+        break;
+      }
+      default:
+        break;
+    }
+    map[position.y][position.x] = TileType.FLOOR;
+    itemData.delete(tileKey);
+    updateUI();
+    this.removeTileAt(position.x, position.y, this.itemsLayer);
+    this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
+
+    const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
+    gameEventBus.enqueue({
+      type: 'player.move.commit',
+      trigger: 'system',
+      payload: { from, to: position, advanceFrame: true }
+    });
+  };
+
+  private handleMonsterEncounter: GameEventHandler<'encounter.monster'> = async (event: MonsterEncounterEvent) => {
+    if (!state || !map) return;
+    const { monster, position, tileKey } = event.payload;
+    if (!monster) {
+      map[position.y][position.x] = TileType.FLOOR;
+      monsterData.delete(tileKey);
+      this.removeTileAt(position.x, position.y, this.monstersLayer);
+      this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
+      const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
+      gameEventBus.enqueue({
+        type: 'player.move.commit',
+        trigger: 'system',
+        payload: { from, to: position, advanceFrame: true }
+      });
+      return;
+    }
+    const result = battleCalc(monster);
+    if (!result.canWin) {
+      gameEventBus.enqueue({
+        type: 'player.move.blocked',
+        trigger: 'system',
+        payload: {
+          reason: 'monster',
+          position,
+          message: `${monster.name || 'Monster'} is too strong to defeat right now.`
+        }
+      });
+      return;
+    }
+    state.hp -= result.hpLoss;
+    map[position.y][position.x] = TileType.FLOOR;
+    monsterData.delete(tileKey);
+    this.removeTileAt(position.x, position.y, this.monstersLayer);
+    this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
+    postMsg(`Fought ${monster.name || 'Monster'} for ${result.rounds} round(s) and lost ${result.hpLoss} HP.`);
+    updateUI();
+    const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
+    gameEventBus.enqueue({
+      type: 'player.move.commit',
+      trigger: 'system',
+      payload: { from, to: position, advanceFrame: true }
+    });
+  };
+
+  private handleStairsEvent: GameEventHandler<'encounter.stairs'> = async (event: StairsEvent) => {
+    if (!state) return;
+    postMsg('Level 1 complete!');
+    const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
+    gameEventBus.enqueue({
+      type: 'player.move.commit',
+      trigger: 'system',
+      payload: { from, to: event.payload.position, advanceFrame: true }
+    });
+  };
 
   renderPlayer() {
     if (!state) return;
