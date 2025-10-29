@@ -1,0 +1,25 @@
+{
+  "id": "training_3",
+  "title": "What is privacy information",
+  "start": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Dr. Prilucy",
+      "text": "(story <What is privacy information> is in development...)",
+      "next": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Dr. Prilucy",
+      "text": "But I can give you a blue key directly because this is just a demo.",
+      "reward": {
+        "gid": "key_blue",
+        "amount": 1,
+        "max": 1,
+        "message": "(Dr. Prilucy hands you a gleaming blue key.)",
+        "limitMessage": "(You already claimed the Dr. Prilucy's key.)"
+      }
+    }
+  ]
+}

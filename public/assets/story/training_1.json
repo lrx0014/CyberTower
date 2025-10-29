@@ -1,0 +1,12 @@
+{
+  "id": "training_1",
+  "title": "How to create a strong password",
+  "start": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Dr. Strong",
+      "text": "(story <How to create a strong password> is in development...)"
+    }
+  ]
+}

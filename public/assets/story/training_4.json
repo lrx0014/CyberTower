@@ -1,0 +1,12 @@
+{
+  "id": "training_4",
+  "title": "How to play",
+  "start": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Dr. Who",
+      "text": "(story <...> is in development...)"
+    }
+  ]
+}

@@ -190,6 +190,79 @@ button:hover {
   display: none;
 }
 
+.dialogue {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: min(90%, 720px);
+  z-index: 1100;
+  font-family: inherit;
+  color: #f0f2f6;
+}
+
+.dialogue-content {
+  background: rgba(16, 18, 26, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+}
+
+.dialogue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.dialogue-header button {
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.dialogue-text {
+  min-height: 64px;
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+  color: #dde1e7;
+}
+
+.dialogue-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.dialogue-option {
+  background: #2a2f3a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: left;
+  color: #f0f2f6;
+  cursor: pointer;
+}
+
+.dialogue-option:hover {
+  background: #344056;
+}
+
+.dialogue-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialogue-controls button {
+  padding: 6px 12px;
+}
+
 @media (max-width: 900px) {
   #game-root {
     flex-direction: column;

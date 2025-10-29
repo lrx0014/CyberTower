@@ -289,25 +289,33 @@
   <object id="12" x="480.667" y="192" width="49.3333" height="50.6667">
    <properties>
     <property name="bonus" value="key_green"/>
-    <property name="kind" value="quest"/>
+    <property name="kind" value="mentor"/>
+    <property name="once" type="bool" value="false"/>
+    <property name="story" value="training_4"/>
    </properties>
   </object>
   <object id="11" x="144" y="192" width="49.3333" height="50.6667">
    <properties>
     <property name="bonus" value="key_green"/>
-    <property name="kind" value="quest"/>
+    <property name="kind" value="mentor"/>
+    <property name="once" type="bool" value="false"/>
+    <property name="story" value="training_1"/>
    </properties>
   </object>
   <object id="13" x="142" y="381.333" width="49.3333" height="50.6667">
    <properties>
     <property name="bonus" value="key_green"/>
-    <property name="kind" value="quest"/>
+    <property name="kind" value="mentor"/>
+    <property name="once" type="bool" value="false"/>
+    <property name="story" value="training_2"/>
    </properties>
   </object>
   <object id="14" x="144.667" y="576" width="49.3333" height="50.6667">
    <properties>
     <property name="bonus" value="key_blue"/>
-    <property name="kind" value="quest"/>
+    <property name="kind" value="mentor"/>
+    <property name="once" type="bool" value="false"/>
+    <property name="story" value="training_3"/>
    </properties>
   </object>
  </objectgroup>
@@ -352,6 +360,8 @@
   <object id="10" x="429.778" y="337.111" width="48" height="48">
    <properties>
     <property name="kind" value="mentor"/>
+    <property name="once" type="bool" value="false"/>
+    <property name="story" value="tutorial_intro"/>
    </properties>
   </object>
   <object id="15" x="385.333" y="624" width="45.3333" height="46.6667">

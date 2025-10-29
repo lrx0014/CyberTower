@@ -1,0 +1,12 @@
+{
+  "id": "training_2",
+  "title": "What is MFA",
+  "start": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Dr. Marry Frank Ali",
+      "text": "(story <What is MFA> is in development...)"
+    }
+  ]
+}

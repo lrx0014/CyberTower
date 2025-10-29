@@ -98,7 +98,17 @@
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"quest"
+                         "value":"mentor"
+                        }, 
+                        {
+                         "name":"once",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"story",
+                         "type":"string",
+                         "value":"training_4"
                         }],
                  "rotation":0,
                  "type":"",
@@ -120,7 +130,17 @@
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"quest"
+                         "value":"mentor"
+                        }, 
+                        {
+                         "name":"once",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"story",
+                         "type":"string",
+                         "value":"training_1"
                         }],
                  "rotation":0,
                  "type":"",
@@ -142,7 +162,17 @@
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"quest"
+                         "value":"mentor"
+                        }, 
+                        {
+                         "name":"once",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"story",
+                         "type":"string",
+                         "value":"training_2"
                         }],
                  "rotation":0,
                  "type":"",
@@ -164,7 +194,17 @@
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"quest"
+                         "value":"mentor"
+                        }, 
+                        {
+                         "name":"once",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"story",
+                         "type":"string",
+                         "value":"training_3"
                         }],
                  "rotation":0,
                  "type":"",
@@ -331,6 +371,16 @@
                          "name":"kind",
                          "type":"string",
                          "value":"mentor"
+                        }, 
+                        {
+                         "name":"once",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"story",
+                         "type":"string",
+                         "value":"tutorial_intro"
                         }],
                  "rotation":0,
                  "type":"",

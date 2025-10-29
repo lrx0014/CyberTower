@@ -138,7 +138,7 @@ resetButton.addEventListener('click', () => {
 
 hintButton.addEventListener('click', () => {
   postMessage(
-    'Move with WASD or the arrow keys. Press E to talk with NPCs. Doors open automatically when adjacent (consumes keys). Colliding with monsters starts a battle.'
+    'Move with WASD or the arrow keys. Doors open automatically when adjacent (consumes keys). Colliding with monsters starts a battle.'
   );
 });
 

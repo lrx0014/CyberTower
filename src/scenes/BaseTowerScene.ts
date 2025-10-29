@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Vec2, gameEventBus } from '../event/bus/eventBus';
 import { createTowerEventHandlers } from '../event/events';
 import { DoorUnlockerInfo, TowerEventContext } from '../event/context';
+import storyManager from '../story/storyManager';
 import { DoorData, ItemData, MonsterStats, PlayerState, TileKey, TileType, UIHooks } from '../global/types';
 
 export const DEFAULT_GAME_WIDTH = 48 * 15 + 24;
@@ -15,13 +16,14 @@ let ROWS = 0;
 let state: PlayerState | null = null;
 let map: TileType[][] | null = null;
 let spawn: { x: number; y: number } = { x: 0, y: 0 };
-let playerName = 'Hero';
+let playerName = 'Traveler';
 
 const monsterData = new Map<TileKey, MonsterStats>();
 const itemData = new Map<TileKey, ItemData>();
 const doorData = new Map<TileKey, DoorData>();
 const itemCatalog = new Map<string, { name?: string }>();
 const doorUnlockers = new Map<TileKey, DoorUnlockerInfo>();
+const storyTriggers = new Map<TileKey, { storyId: string; once: boolean }>();
 
 type Facing = 'up' | 'down' | 'left' | 'right';
 
@@ -136,7 +138,7 @@ export function getActiveScene(): BaseTowerScene | null {
 
 export function resetPlayerState(): boolean {
   if (!state) return false;
-  state = { name: playerName, px: spawn.x, py: spawn.y, hp: 200, atk: 10, def: 5, keys: 0, inventory: {} };
+  state = { name: playerName, px: spawn.x, py: spawn.y, hp: 100, atk: 0, def: 0, keys: 0, inventory: {} };
   resetPlayerAnimationState();
   selectPlayerFrame(false);
   updateUI();
@@ -388,6 +390,7 @@ export class BaseTowerScene extends Phaser.Scene {
     doorData.clear();
     itemCatalog.clear();
     doorUnlockers.clear();
+    storyTriggers.clear();
     seedItemCatalogFromTiles(tm);
     playerName = 'Hero';
 
@@ -425,7 +428,7 @@ export class BaseTowerScene extends Phaser.Scene {
       throw new Error('Objects layer did not provide a player spawn (kind=player).');
     }
 
-    state = { name: playerName, px: spawn.x, py: spawn.y, hp: 200, atk: 10, def: 5, keys: 0, inventory: {} };
+    state = { name: playerName, px: spawn.x, py: spawn.y, hp: 100, atk: 0, def: 0, keys: 0, inventory: {} };
     resetPlayerAnimationState();
     selectPlayerFrame(false);
     updateUI();
@@ -436,6 +439,16 @@ export class BaseTowerScene extends Phaser.Scene {
     }
 
     this.renderPlayer();
+    storyManager.init({
+      onStart: () => {
+        this.lastMoveAttempt = null;
+      },
+      onEnd: () => {
+        this.lastMoveAttempt = null;
+      },
+      grantItem: (gid, amount, max) => this.grantStoryItem(gid, amount, max),
+      getInventoryName: (gid, fallback) => getInventoryName(gid, fallback)
+    });
     this.registerEventHandlers();
     gameEventBus.start();
 
@@ -491,10 +504,20 @@ export class BaseTowerScene extends Phaser.Scene {
           : undefined;
     const kind = (props.kind as string) || obj.type || objName || layerName;
     const key = keyOf(gx, gy);
+    const storyId = typeof props.story === 'string' && props.story.trim().length > 0 ? props.story.trim() : undefined;
+    if (storyId) {
+      let once = false;
+      if (typeof props.once === 'boolean') {
+        once = props.once;
+      } else if (typeof props.once === 'string') {
+        once = props.once.trim().toLowerCase() === 'true';
+      }
+      storyTriggers.set(key, { storyId, once });
+    }
     switch (kind) {
       case 'player':
         spawn = { x: gx, y: gy };
-        playerName = (props.charName as string) || displayName || 'Hero';
+        playerName = (props.charName as string) || displayName || 'Traveler';
         break;
       case 'door':
         map![gy][gx] = TileType.DOOR;
@@ -611,7 +634,7 @@ export class BaseTowerScene extends Phaser.Scene {
   }
 
   private tryMove(dx: number, dy: number) {
-    if (!state || !map) return;
+    if (!state || !map || storyManager.isActive()) return;
     const attemptedFacing = facingFromDelta(dx, dy);
     if (attemptedFacing) {
       playerFacing = attemptedFacing;
@@ -622,6 +645,24 @@ export class BaseTowerScene extends Phaser.Scene {
     }
     const nx = state.px + dx;
     const ny = state.py + dy;
+    const toKey = keyOf(nx, ny);
+    const storyInfo = storyTriggers.get(toKey);
+    if (storyInfo) {
+      storyManager
+        .start(storyInfo.storyId)
+        .then((started) => {
+          if (started && storyInfo.once) {
+            storyTriggers.delete(toKey);
+            this.removeTileAt(nx, ny, this.objectsEntityLayer);
+          }
+        })
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error('[story] failed to start', storyInfo.storyId, err);
+        });
+      return;
+    }
+
     const from = { x: state.px, y: state.py };
     const to = { x: nx, y: ny };
     if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) {
@@ -667,9 +708,45 @@ export class BaseTowerScene extends Phaser.Scene {
     this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
   }
 
+  private grantStoryItem(gid: string, amount: number, max?: number) {
+    if (!state) {
+      return { success: false, granted: 0, current: 0 };
+    }
+    const trimmedGid = typeof gid === 'string' ? gid.trim() : '';
+    if (!trimmedGid) {
+      return { success: false, granted: 0, current: 0 };
+    }
+    const currentCount = state.inventory[trimmedGid] ?? 0;
+    const rawAmount = Number.isFinite(amount) ? Math.floor(amount) : 0;
+    const grantAmount = rawAmount > 0 ? rawAmount : 1;
+    let limit: number | undefined;
+    if (max !== undefined && Number.isFinite(max)) {
+      limit = Math.floor(max);
+    }
+    if (limit !== undefined) {
+      if (limit <= 0 || currentCount >= limit) {
+        return { success: false, granted: 0, current: currentCount };
+      }
+      const remaining = limit - currentCount;
+      const toGrant = Math.max(0, Math.min(grantAmount, remaining));
+      if (toGrant <= 0) {
+        return { success: false, granted: 0, current: currentCount };
+      }
+      addInventoryItem(trimmedGid, toGrant);
+      updateUI();
+      const updatedCount = state.inventory[trimmedGid] ?? currentCount + toGrant;
+      return { success: true, granted: toGrant, current: updatedCount };
+    }
+    addInventoryItem(trimmedGid, grantAmount);
+    updateUI();
+    const updatedCount = state.inventory[trimmedGid] ?? currentCount + grantAmount;
+    return { success: true, granted: grantAmount, current: updatedCount };
+  }
+
   private applyKeyPickup(amount: number) {
     if (!state) return;
     state.keys += amount;
+    updateUI();
   }
 
   private commitMove(destination: Vec2, advanceFrame: boolean) {

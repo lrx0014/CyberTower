@@ -1,0 +1,52 @@
+{
+  "id": "tutorial_intro",
+  "title": "Welcome",
+  "start": "greeting",
+  "nodes": [
+    {
+      "id": "greeting",
+      "speaker": "Mentor",
+      "text": "Welcome to Cyber Tower, traveler.",
+      "next": "guidance"
+    },
+    {
+      "id": "guidance",
+      "speaker": "Mentor",
+      "text": "This Cyber Tower is full of dangers, and you have to use some cool things to protect yourself, like passwords, MFAs, and phishing detectors. Do you know anything about these?",
+      "options": [
+        { "text": "No, please me everything.", "target": "briefing" },
+        { "text": "Yes, I am ready, just let me go", "target": "skip" }
+      ]
+    },
+    {
+      "id": "briefing",
+      "speaker": "Mentor",
+      "text": "Don't worry, we have amazing trainers to help you learn everything. See these rooms? There's a mentor waiting for you in each room. Go visit them!",
+      "next": "farewell"
+    },
+    {
+      "id": "skip",
+      "speaker": "Mentor",
+      "text": "Very well. But before you start, you see there are several mentors are waiting for you in these rooms. Go visit them first to obtain the key to the upper levels of the tower!",
+      "next": "give_key"
+    },
+    {
+      "id": "give_key",
+      "speaker": "Mentor",
+      "text": "Very well. Come and take this key. They are waiting for you.",
+      "next": "farewell"
+    },
+    {
+      "id": "farewell",
+      "speaker": "Mentor",
+      "text": "Good luck. The tower is watching.",
+      "reward": {
+        "gid": "key_green",
+        "amount": 4,
+        "max": 4,
+        "message": "(Mentor hands you a gleaming green key.)",
+        "limitMessage": "(You already claimed the mentor's key.)"
+      }
+    }
+  ]
+}
