@@ -2,7 +2,9 @@ import Phaser from 'phaser';
 import TutorialScene, {
   DEFAULT_GAME_HEIGHT,
   DEFAULT_GAME_WIDTH,
+  debugSetPlayerAttributes,
   getActiveScene,
+  getPlayerSnapshot,
   registerUIHooks,
   resetPlayerState
 } from './scenes/TutorialScene';
@@ -17,6 +19,16 @@ const keysEl = document.getElementById('keys');
 const resetButton = document.getElementById('reset');
 const hintButton = document.getElementById('hint');
 
+// for debug
+const debugToggle = document.getElementById('debug-toggle');
+const debugPanel = document.getElementById('debug-panel');
+const debugClose = document.getElementById('debug-close');
+const debugForm = document.getElementById('debug-form');
+const debugHpInput = document.getElementById('debug-hp');
+const debugAtkInput = document.getElementById('debug-atk');
+const debugDefInput = document.getElementById('debug-def');
+const debugKeysInput = document.getElementById('debug-keys');
+
 if (
   !(msgEl instanceof HTMLElement) ||
   !(nameEl instanceof HTMLElement) ||
@@ -25,7 +37,15 @@ if (
   !(defEl instanceof HTMLElement) ||
   !(keysEl instanceof HTMLElement) ||
   !(resetButton instanceof HTMLButtonElement) ||
-  !(hintButton instanceof HTMLButtonElement)
+  !(hintButton instanceof HTMLButtonElement) ||
+  !(debugToggle instanceof HTMLButtonElement) ||
+  !(debugPanel instanceof HTMLElement) ||
+  !(debugClose instanceof HTMLButtonElement) ||
+  !(debugForm instanceof HTMLFormElement) ||
+  !(debugHpInput instanceof HTMLInputElement) ||
+  !(debugAtkInput instanceof HTMLInputElement) ||
+  !(debugDefInput instanceof HTMLInputElement) ||
+  !(debugKeysInput instanceof HTMLInputElement)
 ) {
   throw new Error('UI elements failed to mount.');
 }
@@ -79,4 +99,48 @@ hintButton.addEventListener('click', () => {
   postMessage(
     'Move with WASD or the arrow keys. Press E to talk with NPCs. Doors open automatically when adjacent (consumes keys). Colliding with monsters starts a battle.'
   );
+});
+
+const toggleDebugPanel = (show: boolean) => {
+  if (show) {
+    debugPanel.classList.remove('hidden');
+  } else {
+    debugPanel.classList.add('hidden');
+  }
+};
+
+const refreshDebugForm = () => {
+  const snapshot = getPlayerSnapshot();
+  if (!snapshot) return;
+  debugHpInput.value = `${snapshot.hp}`;
+  debugAtkInput.value = `${snapshot.atk}`;
+  debugDefInput.value = `${snapshot.def}`;
+  debugKeysInput.value = `${snapshot.keys}`;
+};
+
+debugToggle.addEventListener('click', () => {
+  const isHidden = debugPanel.classList.contains('hidden');
+  toggleDebugPanel(isHidden);
+  if (isHidden) {
+    refreshDebugForm();
+  }
+});
+
+debugClose.addEventListener('click', () => {
+  toggleDebugPanel(false);
+});
+
+debugForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const hp = Number.parseInt(debugHpInput.value, 10);
+  const atk = Number.parseInt(debugAtkInput.value, 10);
+  const def = Number.parseInt(debugDefInput.value, 10);
+  const keys = Number.parseInt(debugKeysInput.value, 10);
+  debugSetPlayerAttributes({
+    hp: Number.isNaN(hp) ? undefined : hp,
+    atk: Number.isNaN(atk) ? undefined : atk,
+    def: Number.isNaN(def) ? undefined : def,
+    keys: Number.isNaN(keys) ? undefined : keys
+  });
+  refreshDebugForm();
 });

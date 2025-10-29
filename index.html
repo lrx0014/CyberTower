@@ -7,27 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Cyber Tower Demo</title>
-  <style>
-    html, body { height: 100%; }
-    body { margin: 0; background:#0e0f12; font-family: system-ui, -apple-system, Segoe UI, Roboto, PingFang SC, Helvetica, Arial; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-    #game-root { display:flex; flex-direction:row; gap:12px; padding:12px; box-sizing:border-box; align-items:center; justify-content:center; width:100%; max-width:1200px; min-height:0; height:100vh; max-height:100vh; }
-    #phaser { flex:1 1 auto; display:flex; justify-content:center; align-items:center; min-width:0; min-height:0; height:100%; }
-    #phaser canvas { display:block; max-width:100%; max-height:100%; }
-    #ui { flex:0 0 300px; background:#14161b; color:#e6e7ea; border-radius:12px; padding:12px; box-shadow: 0 4px 20px rgba(0,0,0,.35); max-height:100%; overflow:auto; }
-    .stat { display:flex; justify-content:space-between; margin:4px 0; font-size:14px; }
-    .headline { font-size:18px; font-weight:700; margin-bottom:8px; }
-    .panel { background:#0f1116; border-radius:10px; padding:10px; margin-top:10px; }
-    .btns { display:flex; gap:8px; margin-top:10px; }
-    button { background:#2a2f3a; color:#e6e7ea; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
-    button:hover { background:#344056; }
-    .msg { min-height: 56px; white-space:pre-line; font-size:13px; color:#cfd2d8; }
-    .tip { font-size:12px; color:#9aa3b2; margin-top:6px; }
-    @media (max-width: 900px) {
-      #game-root { flex-direction:column; height:auto; max-width: calc(100vw - 24px); }
-      #phaser { width:100%; height:min(70vh, 100vw); }
-      #ui { width:100%; max-width:360px; }
-    }
-  </style>
+  <link rel="stylesheet" href="/src/styles/main.css" />
 </head>
 <body>
   <div id="game-root">
@@ -54,10 +34,38 @@
         <div class="btns">
           <button id="reset">Restart</button>
           <button id="hint">Hint</button>
+          <button id="debug-toggle" type="button">Debug</button>
         </div>
         <div class="tip">This is just a demo.</div>
       </div>
     </div>
+  </div>
+  <div id="debug-panel" class="debug-panel hidden">
+    <div class="debug-header">
+      <span>Debug Panel</span>
+      <button id="debug-close" type="button" aria-label="Close debug panel">×</button>
+    </div>
+    <form id="debug-form" class="debug-form">
+      <label class="debug-field" for="debug-hp">
+        HP
+        <input id="debug-hp" type="number" min="0" step="1" inputmode="numeric" />
+      </label>
+      <label class="debug-field" for="debug-atk">
+        ATK
+        <input id="debug-atk" type="number" min="0" step="1" inputmode="numeric" />
+      </label>
+      <label class="debug-field" for="debug-def">
+        DEF
+        <input id="debug-def" type="number" min="0" step="1" inputmode="numeric" />
+      </label>
+      <label class="debug-field" for="debug-keys">
+        Keys (set total)
+        <input id="debug-keys" type="number" min="0" step="1" inputmode="numeric" />
+      </label>
+      <div class="debug-actions">
+        <button type="submit">Apply Stats</button>
+      </div>
+    </form>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

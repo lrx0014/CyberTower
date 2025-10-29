@@ -159,6 +159,42 @@ function updateUI() {
   uiHooks?.updateStats(state);
 }
 
+export function getPlayerSnapshot(): PlayerState | null {
+  if (!state) return null;
+  return { ...state };
+}
+
+const clampStat = (value: number | undefined, fallback: number): number => {
+  if (value === undefined || Number.isNaN(value)) return fallback;
+  const v = Math.floor(value);
+  return Number.isFinite(v) ? Math.max(0, v) : fallback;
+};
+
+export function debugSetPlayerAttributes(
+  attrs: Partial<Pick<PlayerState, 'hp' | 'atk' | 'def' | 'keys'>>
+): PlayerState | null {
+  if (!state) return null;
+  if (attrs.hp !== undefined) state.hp = clampStat(attrs.hp, state.hp);
+  if (attrs.atk !== undefined) state.atk = clampStat(attrs.atk, state.atk);
+  if (attrs.def !== undefined) state.def = clampStat(attrs.def, state.def);
+  if (attrs.keys !== undefined) state.keys = clampStat(attrs.keys, state.keys);
+  updateUI();
+  postMsg('Debug: Player attributes updated.');
+  return { ...state };
+}
+
+export function debugGrantKeys(count: number): PlayerState | null {
+  if (!state) return null;
+  const delta = Math.floor(count);
+  if (!Number.isFinite(delta) || delta <= 0) {
+    return { ...state };
+  }
+  state.keys += delta;
+  updateUI();
+  postMsg(`Debug: Granted keys x${delta}.`);
+  return { ...state };
+}
+
 const keyOf = (x: number, y: number): TileKey => `${x},${y}`;
 
 function battleCalc(monster: MonsterStats) {
