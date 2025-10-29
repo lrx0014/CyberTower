@@ -1,5 +1,7 @@
 import { BaseTowerScene, TowerSceneConfig } from './BaseTowerScene';
 
+export type { DirectionInput } from './BaseTowerScene';
+
 export {
   DEFAULT_GAME_HEIGHT,
   DEFAULT_GAME_WIDTH,
@@ -8,6 +10,7 @@ export {
   getActiveScene,
   getInventoryEntries,
   getPlayerSnapshot,
+  requestDirectionalInput,
   registerUIHooks,
   resetPlayerState
 } from './BaseTowerScene';

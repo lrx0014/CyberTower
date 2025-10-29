@@ -7,9 +7,11 @@ import TutorialScene, {
   getActiveScene,
   getInventoryEntries,
   getPlayerSnapshot,
+  requestDirectionalInput,
   registerUIHooks,
   resetPlayerState
 } from './scenes/TutorialScene';
+import type { DirectionInput } from './scenes/TutorialScene';
 import { PlayerState } from './global/types';
 
 const msgEl = document.getElementById('msg');
@@ -32,6 +34,10 @@ const debugDefInput = document.getElementById('debug-def');
 const debugItemGidInput = document.getElementById('debug-item-gid');
 const debugItemQtyInput = document.getElementById('debug-item-qty');
 const debugItemApplyButton = document.getElementById('debug-item-apply');
+const mobileControls = document.getElementById('mobile-controls');
+const mobileButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(
+  '#mobile-controls [data-direction]'
+));
 
 if (
   !(msgEl instanceof HTMLElement) ||
@@ -51,9 +57,16 @@ if (
   !(debugDefInput instanceof HTMLInputElement) ||
   !(debugItemGidInput instanceof HTMLInputElement) ||
   !(debugItemQtyInput instanceof HTMLInputElement) ||
-  !(debugItemApplyButton instanceof HTMLButtonElement)
+  !(debugItemApplyButton instanceof HTMLButtonElement) ||
+  !(mobileControls instanceof HTMLElement) ||
+  mobileButtons.length === 0
 ) {
   throw new Error('UI elements failed to mount.');
+}
+
+const invalidMobileButton = mobileButtons.find((btn) => !(btn instanceof HTMLButtonElement));
+if (invalidMobileButton) {
+  throw new Error('Mobile controls failed to mount.');
 }
 
 const postMessage = (text: string) => {
@@ -192,4 +205,82 @@ debugItemApplyButton.addEventListener('click', () => {
   if (Number.isNaN(qty) || qty <= 0) return;
   debugGrantInventoryItem(gid, qty);
   debugItemQtyInput.value = '1';
+});
+
+const triggerDirection = (direction: DirectionInput) => {
+  requestDirectionalInput(direction);
+};
+
+const activeTimers = new Map<HTMLButtonElement, number>();
+const repeatDelayMs = 150;
+
+const isDirectionInput = (value: string): value is DirectionInput => {
+  return value === 'up' || value === 'down' || value === 'left' || value === 'right';
+};
+
+const stopContinuousMove = (button: HTMLButtonElement) => {
+  const timer = activeTimers.get(button);
+  if (timer !== undefined) {
+    window.clearInterval(timer);
+    activeTimers.delete(button);
+  }
+};
+
+const startContinuousMove = (button: HTMLButtonElement, direction: DirectionInput, pointerId: number) => {
+  triggerDirection(direction);
+  stopContinuousMove(button);
+  const intervalId = window.setInterval(() => {
+    triggerDirection(direction);
+  }, repeatDelayMs);
+  activeTimers.set(button, intervalId);
+  try {
+    button.setPointerCapture(pointerId);
+  } catch (err) {
+    // ignore pointer capture errors (e.g. unsupported scenarios)
+  }
+};
+
+mobileButtons.forEach((button) => {
+  const rawDirection = (button.dataset.direction ?? '').trim().toLowerCase();
+  if (!isDirectionInput(rawDirection)) return;
+  const direction = rawDirection;
+
+  const handlePointerUp = (event: PointerEvent) => {
+    stopContinuousMove(button);
+    if (button.hasPointerCapture(event.pointerId)) {
+      button.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  button.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    startContinuousMove(button, direction, event.pointerId);
+  });
+
+  button.addEventListener('pointerup', (event) => {
+    event.preventDefault();
+    handlePointerUp(event);
+  });
+
+  button.addEventListener('pointercancel', (event) => {
+    handlePointerUp(event);
+  });
+
+  button.addEventListener('pointerleave', () => {
+    stopContinuousMove(button);
+  });
+
+  button.addEventListener('pointerout', () => {
+    stopContinuousMove(button);
+  });
+
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+  });
+});
+
+window.addEventListener('pointerup', () => {
+  mobileButtons.forEach((button) => {
+    stopContinuousMove(button);
+  });
 });

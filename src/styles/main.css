@@ -263,6 +263,46 @@ button:hover {
   padding: 6px 12px;
 }
 
+.mobile-controls {
+  display: none;
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 900;
+  pointer-events: none;
+}
+
+.mobile-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 64px);
+  grid-template-rows: repeat(3, 64px);
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.mobile-btn,
+.mobile-spacer {
+  width: 64px;
+  height: 64px;
+}
+
+.mobile-btn {
+  border-radius: 50%;
+  background: rgba(42, 47, 58, 0.92);
+  color: #f0f2f6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  touch-action: manipulation;
+}
+
+.mobile-btn:active {
+  background: rgba(64, 72, 90, 0.92);
+}
+
 @media (max-width: 900px) {
   #game-root {
     flex-direction: column;
@@ -285,5 +325,13 @@ button:hover {
     bottom: 68px;
     width: calc(100% - 24px);
     max-width: 360px;
+  }
+
+  body {
+    align-items: flex-start;
+  }
+
+  .mobile-controls {
+    display: block;
   }
 }

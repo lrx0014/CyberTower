@@ -136,6 +136,13 @@ export function getActiveScene(): BaseTowerScene | null {
   return activeScene;
 }
 
+export type DirectionInput = 'up' | 'down' | 'left' | 'right';
+
+export function requestDirectionalInput(direction: DirectionInput) {
+  if (!direction) return;
+  activeScene?.handleDirectionalInput(direction);
+}
+
 export function resetPlayerState(): boolean {
   if (!state) return false;
   state = { name: playerName, px: spawn.x, py: spawn.y, hp: 100, atk: 0, def: 0, keys: 0, inventory: {} };
@@ -675,6 +682,25 @@ export class BaseTowerScene extends Phaser.Scene {
     }
     this.lastMoveAttempt = { from, to };
     gameEventBus.enqueue({ type: 'player.move.attempt', trigger: 'player', payload: { from, to } });
+  }
+
+  public handleDirectionalInput(direction: DirectionInput) {
+    switch (direction) {
+      case 'up':
+        this.tryMove(0, -1);
+        break;
+      case 'down':
+        this.tryMove(0, 1);
+        break;
+      case 'left':
+        this.tryMove(-1, 0);
+        break;
+      case 'right':
+        this.tryMove(1, 0);
+        break;
+      default:
+        break;
+    }
   }
 
   private removeTileAt(x: number, y: number, layer?: Phaser.Tilemaps.TilemapLayer) {
