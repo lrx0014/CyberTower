@@ -4,6 +4,7 @@ import {
   GameEventHandler,
   ItemPickupEvent,
   MonsterEncounterEvent,
+  Vec2,
   PlayerMoveAttemptEvent,
   PlayerMoveBlockedEvent,
   PlayerMoveCommitEvent,
@@ -28,6 +29,16 @@ let playerName = 'Hero';
 const monsterData = new Map<TileKey, MonsterStats>();
 const itemData = new Map<TileKey, ItemData>();
 const doorData = new Map<TileKey, DoorData>();
+const itemCatalog = new Map<string, { name?: string }>();
+const doorUnlockers = new Map<
+  TileKey,
+  {
+    doorKey?: TileKey;
+    require?: string;
+    requireName?: string;
+    name?: string;
+  }
+>();
 
 type Facing = 'up' | 'down' | 'left' | 'right';
 
@@ -142,7 +153,7 @@ export function getActiveScene(): TutorialScene | null {
 
 export function resetPlayerState(): boolean {
   if (!state) return false;
-  state = { name: playerName, px: spawn.x, py: spawn.y, hp: 200, atk: 10, def: 5, keys: 0 };
+  state = { name: playerName, px: spawn.x, py: spawn.y, hp: 200, atk: 10, def: 5, keys: 0, inventory: {} };
   resetPlayerAnimationState();
   selectPlayerFrame(false);
   updateUI();
@@ -159,9 +170,98 @@ function updateUI() {
   uiHooks?.updateStats(state);
 }
 
+function registerItemDefinition(gid: string, name?: string) {
+  if (!gid) return;
+  const trimmedName = typeof name === 'string' && name.trim().length > 0 ? name.trim() : undefined;
+  const existing = itemCatalog.get(gid) ?? {};
+  if (trimmedName) {
+    existing.name = trimmedName;
+  }
+  itemCatalog.set(gid, existing);
+}
+
+const NAME_KEYS = ['displayName', 'label', 'name', 'title'];
+
+function getNameFromProps(props: Record<string, unknown> | undefined): string | undefined {
+  if (!props) return undefined;
+  for (const key of NAME_KEYS) {
+    const value = props[key];
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed.length > 0) {
+        return trimmed;
+      }
+    }
+  }
+  return undefined;
+}
+
+function seedItemCatalogFromTiles(map: Phaser.Tilemaps.Tilemap) {
+  map.tilesets.forEach((tileset) => {
+    const tileProps = tileset.tileProperties as Record<string, Record<string, unknown>> | undefined;
+    if (!tileProps) return;
+    Object.entries(tileProps).forEach(([indexStr, props]) => {
+      if (!props) return;
+      const rawGid = props.gid;
+      if (rawGid === undefined || rawGid === null) return;
+      const definedGid = String(rawGid).trim();
+      if (!definedGid) return;
+      const tileName = getNameFromProps(props);
+      registerItemDefinition(definedGid, tileName);
+    });
+  });
+}
+
+function addInventoryItem(gid: string, quantity: number, name?: string) {
+  if (!state || !gid) return;
+  registerItemDefinition(gid, name);
+  const q = Math.max(1, Number.isFinite(quantity) ? Math.floor(quantity) : 1);
+  const current = state.inventory[gid] ?? 0;
+  state.inventory[gid] = current + q;
+}
+
+function consumeInventoryItem(gid: string, quantity: number): boolean {
+  if (!state || !gid) return false;
+  const current = state.inventory[gid] ?? 0;
+  const required = Math.max(1, Number.isFinite(quantity) ? Math.floor(quantity) : 1);
+  if (current < required) return false;
+  const next = current - required;
+  if (next > 0) {
+    state.inventory[gid] = next;
+  } else {
+    delete state.inventory[gid];
+  }
+  return true;
+}
+
+function getInventoryName(gid: string | undefined, fallback?: string): string {
+  if (!gid) return fallback ?? 'key';
+  const fromCatalog = itemCatalog.get(gid)?.name;
+  if (fromCatalog && fromCatalog.length > 0) return fromCatalog;
+  if (fallback && fallback.length > 0) return fallback;
+  return gid;
+}
+
 export function getPlayerSnapshot(): PlayerState | null {
   if (!state) return null;
   return { ...state };
+}
+
+export interface InventoryEntry {
+  gid: string;
+  name: string;
+  count: number;
+}
+
+export function getInventoryEntries(): InventoryEntry[] {
+  if (!state) return [];
+  return Object.entries(state.inventory)
+    .map(([gid, count]) => ({
+      gid,
+      count,
+      name: getInventoryName(gid, undefined)
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 const clampStat = (value: number | undefined, fallback: number): number => {
@@ -171,31 +271,42 @@ const clampStat = (value: number | undefined, fallback: number): number => {
 };
 
 export function debugSetPlayerAttributes(
-  attrs: Partial<Pick<PlayerState, 'hp' | 'atk' | 'def' | 'keys'>>
+  attrs: Partial<Pick<PlayerState, 'hp' | 'atk' | 'def'>>
 ): PlayerState | null {
   if (!state) return null;
   if (attrs.hp !== undefined) state.hp = clampStat(attrs.hp, state.hp);
   if (attrs.atk !== undefined) state.atk = clampStat(attrs.atk, state.atk);
   if (attrs.def !== undefined) state.def = clampStat(attrs.def, state.def);
-  if (attrs.keys !== undefined) state.keys = clampStat(attrs.keys, state.keys);
   updateUI();
   postMsg('Debug: Player attributes updated.');
   return { ...state };
 }
 
-export function debugGrantKeys(count: number): PlayerState | null {
+export function debugGrantInventoryItem(gid: string, count: number, name?: string): PlayerState | null {
   if (!state) return null;
-  const delta = Math.floor(count);
-  if (!Number.isFinite(delta) || delta <= 0) {
+  const trimmedGid = gid.trim();
+  if (!trimmedGid) return { ...state };
+  const amount = Math.floor(count);
+  if (!Number.isFinite(amount) || amount <= 0) {
     return { ...state };
   }
-  state.keys += delta;
+  const known = itemCatalog.has(trimmedGid);
+  if (!known && !name) {
+    postMsg(`Debug Error: item not found with gid ${trimmedGid}`);
+    return { ...state };
+  }
+  addInventoryItem(trimmedGid, amount, name);
+  const itemName = getInventoryName(trimmedGid, name);
+  postMsg(`Debug: Granted ${itemName}${amount > 1 ? ` x${amount}` : ''}.`);
   updateUI();
-  postMsg(`Debug: Granted keys x${delta}.`);
   return { ...state };
 }
 
 const keyOf = (x: number, y: number): TileKey => `${x},${y}`;
+const parseTileKey = (key: TileKey): { x: number; y: number } => {
+  const [sx, sy] = key.split(',');
+  return { x: Number.parseInt(sx, 10), y: Number.parseInt(sy, 10) };
+};
 
 function battleCalc(monster: MonsterStats) {
   if (!state) throw new Error('Player state is not initialised.');
@@ -279,6 +390,9 @@ export default class TutorialScene extends Phaser.Scene {
     monsterData.clear();
     itemData.clear();
     doorData.clear();
+    itemCatalog.clear();
+    doorUnlockers.clear();
+    seedItemCatalogFromTiles(tm);
     playerName = 'Hero';
 
     if (this.wallsLayer) {
@@ -291,65 +405,31 @@ export default class TutorialScene extends Phaser.Scene {
       }
     }
 
-    const objLayer = tm.getObjectLayer('objects');
-    objLayer?.objects.forEach((obj) => {
-      const gx = Math.floor((obj.x ?? 0) / CELL);
-      const gy = Math.floor((obj.y ?? 0) / CELL);
-      if (!(gx >= 0 && gy >= 0 && gx < COLS && gy < ROWS)) return;
-      const props: Record<string, unknown> = {};
-      (obj.properties ?? []).forEach((p) => {
-        if (!p.name) return;
-        props[p.name] = p.value;
-      });
-      const kind = (props.kind as string) || obj.type || obj.name;
-      const key = keyOf(gx, gy);
-      switch (kind) {
-        case 'player':
-          spawn = { x: gx, y: gy };
-          playerName = (props.charName as string) || (props.displayName as string) || (props.name as string) || 'Hero';
-          break;
-        case 'door':
-          map![gy][gx] = TileType.DOOR;
-          doorData.set(key, {
-            doorType: (props.doorType as string) || 'yellow',
-            keyCost: Number(props.keyCost ?? 1)
-          });
-          break;
-        case 'key':
-          map![gy][gx] = TileType.KEY;
-          itemData.set(key, { type: 'key', value: Number(props.value ?? 1) });
-          break;
-        case 'item': {
-          const itemType = (props.itemType as ItemData['type']) || 'hp';
-          let tileType = TileType.HP;
-          if (itemType === 'atk') tileType = TileType.ATK;
-          else if (itemType === 'def') tileType = TileType.DEF;
-          map![gy][gx] = tileType;
-          itemData.set(key, { type: itemType, value: Number(props.value ?? (itemType === 'hp' ? 50 : 3)) });
-          break;
+    if (this.doorsLayer) {
+      this.doorsLayer.forEachTile((tile) => {
+        if (!tile || tile.index < 0) return;
+        const { x, y } = tile;
+        if (x >= 0 && y >= 0 && x < COLS && y < ROWS) {
+          const key = keyOf(x, y);
+          map![y][x] = TileType.DOOR;
+          if (!doorData.has(key)) {
+            doorData.set(key, { doorType: 'yellow', keyCost: 1 });
+          }
         }
-        case 'stairs':
-          map![gy][gx] = TileType.STAIRS;
-          break;
-        case 'monster':
-          map![gy][gx] = TileType.MONSTER;
-          monsterData.set(key, {
-            name: (props.name as string) || 'Monster',
-            hp: Number(props.hp ?? 20),
-            atk: Number(props.atk ?? 5),
-            def: Number(props.def ?? 0)
-          });
-          break;
-        default:
-          break;
-      }
+      });
+    }
+
+    const objectLayerNames = ['objects', 'doors', 'items'];
+    objectLayerNames.forEach((layerName) => {
+      const layer = tm.getObjectLayer(layerName);
+      layer?.objects.forEach((obj) => this.processObject(layerName, obj));
     });
 
     if (spawn.x == null || spawn.y == null) {
       throw new Error('Objects layer did not provide a player spawn (kind=player).');
     }
 
-    state = { name: playerName, px: spawn.x, py: spawn.y, hp: 200, atk: 10, def: 5, keys: 0 };
+    state = { name: playerName, px: spawn.x, py: spawn.y, hp: 200, atk: 10, def: 5, keys: 0, inventory: {} };
     resetPlayerAnimationState();
     selectPlayerFrame(false);
     updateUI();
@@ -375,6 +455,142 @@ export default class TutorialScene extends Phaser.Scene {
     });
 
     this.centerOnPlayer();
+  }
+
+  private processObject(layerName: string, obj: Phaser.Types.Tilemaps.TiledObject) {
+    const baseX = obj.x ?? 0;
+    const baseY = obj.y ?? 0;
+    const width = obj.width && obj.width > 0 ? obj.width : CELL;
+    const height = obj.height && obj.height > 0 ? obj.height : CELL;
+    const isTileObject = typeof (obj as { gid?: number }).gid === 'number';
+
+    let gx: number;
+    let gy: number;
+
+    if (isTileObject) {
+      // Tile objects in Tiled are positioned by their bottom-left corner.
+      const adjustedY = baseY - height;
+      gx = Math.floor(baseX / CELL);
+      gy = Math.floor(adjustedY / CELL);
+    } else {
+      const centerX = baseX + width / 2;
+      const centerY = baseY + height / 2;
+      gx = Math.floor(centerX / CELL);
+      gy = Math.floor(centerY / CELL);
+    }
+
+    if (!(gx >= 0 && gy >= 0 && gx < COLS && gy < ROWS)) return;
+    const props: Record<string, unknown> = {};
+    (obj.properties ?? []).forEach((p) => {
+      if (!p.name) return;
+      props[p.name] = p.value;
+    });
+    const objName = typeof obj.name === 'string' && obj.name.trim().length > 0 ? obj.name.trim() : undefined;
+    const displayName = getNameFromProps(props) ?? objName;
+    const gidValue =
+      typeof (obj as { gid?: number }).gid === 'number'
+        ? String((obj as { gid?: number }).gid)
+        : props.gid !== undefined && props.gid !== null
+          ? String(props.gid)
+          : undefined;
+    const kind = (props.kind as string) || obj.type || objName || layerName;
+    const key = keyOf(gx, gy);
+    switch (kind) {
+      case 'player':
+        spawn = { x: gx, y: gy };
+        playerName = (props.charName as string) || displayName || 'Hero';
+        break;
+      case 'door':
+        map![gy][gx] = TileType.DOOR;
+        {
+          const requireId = props.require !== undefined && props.require !== null ? String(props.require) : undefined;
+          const requireDisplayName =
+            requireId && typeof props.requireName === 'string' && props.requireName.trim().length > 0
+              ? (props.requireName as string).trim()
+              : requireId
+                ? getInventoryName(requireId, undefined)
+                : undefined;
+          doorData.set(key, {
+            doorType: (props.doorType as string) || 'yellow',
+            keyCost: Number(props.keyCost ?? 1),
+            require: requireId,
+            requireName: requireDisplayName,
+            name: displayName
+          });
+        }
+        break;
+      case 'key':
+        map![gy][gx] = TileType.KEY;
+        {
+          const resolvedName = gidValue ? getInventoryName(gidValue, displayName) : displayName;
+          itemData.set(key, {
+            type: 'key',
+            value: Number(props.value ?? 1),
+            gid: gidValue,
+            name: resolvedName
+          });
+        }
+        break;
+      case 'door_unlocker': {
+        const requireId = props.require !== undefined && props.require !== null ? String(props.require) : undefined;
+        const requireDisplayName =
+          requireId && typeof props.requireName === 'string' && props.requireName.trim().length > 0
+            ? (props.requireName as string).trim()
+            : undefined;
+        const neighbors: Array<{ x: number; y: number }> = [
+          { x: gx + 1, y: gy },
+          { x: gx - 1, y: gy },
+          { x: gx, y: gy + 1 },
+          { x: gx, y: gy - 1 }
+        ];
+        let linkedDoorKey: TileKey | undefined;
+        neighbors.some(({ x: nx, y: ny }) => {
+          if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) return false;
+          if (map![ny][nx] === TileType.DOOR) {
+            linkedDoorKey = keyOf(nx, ny);
+            return true;
+          }
+          return false;
+        });
+        if (linkedDoorKey) {
+          const existingDoor = doorData.get(linkedDoorKey) ?? {
+            doorType: 'yellow',
+            keyCost: 0
+          };
+          const updatedDoor: DoorData = {
+            ...existingDoor,
+            require: requireId ?? existingDoor.require,
+            requireName: requireDisplayName ?? existingDoor.requireName,
+            name: existingDoor.name ?? displayName
+          };
+          doorData.set(linkedDoorKey, updatedDoor);
+        }
+        doorUnlockers.set(key, {
+          doorKey: linkedDoorKey,
+          require: requireId,
+          requireName:
+            requireDisplayName ??
+            (linkedDoorKey ? doorData.get(linkedDoorKey)?.requireName : undefined) ??
+            (requireId ? getInventoryName(requireId, undefined) : undefined),
+          name: displayName
+        });
+        break;
+      }
+      case 'stairs':
+        map![gy][gx] = TileType.STAIRS;
+        break;
+      case 'monster':
+        map![gy][gx] = TileType.MONSTER;
+        monsterData.set(key, {
+          name: (props.name as string) || displayName || 'Monster',
+          hp: Number(props.hp ?? 20),
+          atk: Number(props.atk ?? 5),
+          def: Number(props.def ?? 0)
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   private registerEventHandlers() {
@@ -429,6 +645,18 @@ export default class TutorialScene extends Phaser.Scene {
     }
   }
 
+  private openDoorTile(position: Vec2) {
+    if (!map) return;
+    const { x, y } = position;
+    if (y >= 0 && x >= 0 && y < map.length && x < map[y].length) {
+      map[y][x] = TileType.FLOOR;
+    }
+    const key = keyOf(x, y);
+    doorData.delete(key);
+    this.removeTileAt(x, y, this.doorsLayer);
+    this.removeTileAt(x, y, this.objectsEntityLayer);
+  }
+
   private handlePlayerMoveAttempt: GameEventHandler<'player.move.attempt'> = async (event: PlayerMoveAttemptEvent) => {
     if (!state || !map) return;
     const { from, to } = event.payload;
@@ -443,6 +671,7 @@ export default class TutorialScene extends Phaser.Scene {
     }
     const tileType = map[ny][nx];
     const tileKey = keyOf(nx, ny);
+    const unlockerInfo = doorUnlockers.get(tileKey);
 
     if (tileType === TileType.WALL) {
       gameEventBus.enqueue({
@@ -453,20 +682,11 @@ export default class TutorialScene extends Phaser.Scene {
       return;
     }
 
-    if (tileType === TileType.DOOR) {
+    if (tileType === TileType.DOOR && !unlockerInfo) {
       gameEventBus.enqueue({
         type: 'encounter.door',
         trigger: 'system',
         payload: { position: to, door: doorData.get(tileKey), tileKey }
-      });
-      return;
-    }
-
-    if (this.objectsEntityLayer?.hasTileAt(nx, ny) && tileType === TileType.FLOOR) {
-      gameEventBus.enqueue({
-        type: 'player.move.blocked',
-        trigger: 'system',
-        payload: { reason: 'entity', position: to, message: 'Something blocks the way.' }
       });
       return;
     }
@@ -491,6 +711,20 @@ export default class TutorialScene extends Phaser.Scene {
 
     if (tileType === TileType.STAIRS) {
       gameEventBus.enqueue({ type: 'encounter.stairs', trigger: 'system', payload: { position: to } });
+      return;
+    }
+
+    if (unlockerInfo) {
+      this.handleDoorUnlockerMove(tileKey, to);
+      return;
+    }
+
+    if (this.objectsEntityLayer?.hasTileAt(nx, ny) && tileType === TileType.FLOOR) {
+      gameEventBus.enqueue({
+        type: 'player.move.blocked',
+        trigger: 'system',
+        payload: { reason: 'entity', position: to, message: 'Something blocks the way.' }
+      });
       return;
     }
 
@@ -528,22 +762,36 @@ export default class TutorialScene extends Phaser.Scene {
   private handleDoorEncounter: GameEventHandler<'encounter.door'> = async (event: DoorEncounterEvent) => {
     if (!state || !map) return;
     const { door, position, tileKey } = event.payload;
-    const need = door?.keyCost ?? 1;
-    if (state.keys < need) {
-      gameEventBus.enqueue({
-        type: 'player.move.blocked',
-        trigger: 'system',
-        payload: { reason: 'keys', position, message: `Need ${need} key(s).` }
-      });
-      return;
+    const requireId = door?.require;
+    let opened = false;
+    if (requireId) {
+      const consumed = consumeInventoryItem(requireId, 1);
+      if (!consumed) {
+        const itemName = getInventoryName(requireId, door?.requireName);
+        postMsg(`You need ${itemName} to open this door.`);
+        return;
+      }
+      const itemName = getInventoryName(requireId, door?.requireName);
+      postMsg(`You used ${itemName} to open the door.`);
+      opened = true;
+    } else {
+      const need = door?.keyCost ?? 1;
+      if (state.keys < need) {
+        postMsg(`Need ${need} key(s).`);
+        return;
+      }
+      state.keys -= need;
+      postMsg(`Used ${need} key(s). The door opened.`);
+      opened = true;
     }
-    state.keys -= need;
-    map[position.y][position.x] = TileType.FLOOR;
-    doorData.delete(tileKey);
-    postMsg(`Used ${need} key(s). The door opened.`);
+    if (!opened) return;
+    this.openDoorTile(position);
+    for (const [unlockKey, data] of doorUnlockers) {
+      if (data.doorKey === tileKey) {
+        doorUnlockers.delete(unlockKey);
+      }
+    }
     updateUI();
-    this.removeTileAt(position.x, position.y, this.doorsLayer);
-    this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
 
     const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
     gameEventBus.enqueue({
@@ -556,12 +804,20 @@ export default class TutorialScene extends Phaser.Scene {
   private handleItemPickup: GameEventHandler<'encounter.item'> = async (event: ItemPickupEvent) => {
     if (!state || !map) return;
     const { item, tileType, position, tileKey } = event.payload;
-    const value = item?.value ?? 1;
     switch (tileType) {
-      case TileType.KEY:
-        state.keys += value;
-        postMsg(`Picked up yellow key x${value}.`);
+      case TileType.KEY: {
+        const gid = item?.gid;
+        const amount = item?.value ?? 1;
+        if (gid) {
+          addInventoryItem(gid, amount, item?.name);
+          const itemName = getInventoryName(gid, item?.name);
+          postMsg(`Obtained ${itemName}${amount > 1 ? ` x${amount}` : ''}.`);
+        } else {
+          state.keys += amount;
+          postMsg(`Picked up key x${amount}.`);
+        }
         break;
+      }
       case TileType.HP: {
         const hpValue = item?.value ?? 50;
         state.hp += hpValue;
@@ -651,6 +907,85 @@ export default class TutorialScene extends Phaser.Scene {
       payload: { from, to: event.payload.position, advanceFrame: true }
     });
   };
+
+  private handleDoorUnlockerMove(tileKey: TileKey, destination: Vec2) {
+    if (!state || !map) return;
+    const info = doorUnlockers.get(tileKey);
+    if (!info) {
+      const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
+      gameEventBus.enqueue({
+        type: 'player.move.commit',
+        trigger: 'system',
+        payload: { from, to: destination, advanceFrame: true }
+      });
+      return;
+    }
+
+    const doorKey = info.doorKey;
+    const door = doorKey ? doorData.get(doorKey) : undefined;
+    const requireId = door?.require ?? info.require;
+    const requireDisplay = door?.requireName ?? info.requireName;
+    let opened = false;
+
+    if (requireId) {
+      const consumed = consumeInventoryItem(requireId, 1);
+      if (!consumed) {
+        const itemName = getInventoryName(requireId, requireDisplay);
+        postMsg(`You need ${itemName} to open this door.`);
+        gameEventBus.enqueue({
+          type: 'player.move.blocked',
+          trigger: 'system',
+          payload: { reason: 'keys', position: destination, message: `You need ${itemName} to open this door.` }
+        });
+        return;
+      } else {
+        const itemName = getInventoryName(requireId, requireDisplay);
+        postMsg(`You used ${itemName} to open the door.`);
+        opened = true;
+      }
+    } else {
+      const need = door?.keyCost ?? 0;
+      if (need > 0 && state.keys >= need) {
+        state.keys -= need;
+        postMsg(`Used ${need} key(s). The door opened.`);
+        opened = true;
+      } else if (need > 0) {
+        postMsg(`Need ${need} key(s).`);
+        gameEventBus.enqueue({
+          type: 'player.move.blocked',
+          trigger: 'system',
+          payload: { reason: 'keys', position: destination, message: `Need ${need} key(s).` }
+        });
+        return;
+      } else {
+        postMsg('The door unlocks.');
+        opened = true;
+      }
+    }
+
+    if (opened) {
+      if (doorKey) {
+        const doorPos = parseTileKey(doorKey);
+        this.openDoorTile(doorPos);
+        for (const [otherKey, data] of doorUnlockers) {
+          if (data.doorKey === doorKey) {
+            doorUnlockers.delete(otherKey);
+          }
+        }
+      } else {
+        doorUnlockers.delete(tileKey);
+      }
+      this.removeTileAt(destination.x, destination.y, this.objectsEntityLayer);
+      updateUI();
+    }
+
+    const from = this.lastMoveAttempt?.from ?? { x: state.px, y: state.py };
+    gameEventBus.enqueue({
+      type: 'player.move.commit',
+      trigger: 'system',
+      payload: { from, to: destination, advanceFrame: true }
+    });
+  }
 
   renderPlayer() {
     if (!state) return;

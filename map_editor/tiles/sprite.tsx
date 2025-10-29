@@ -117,9 +117,10 @@
  </tile>
  <tile id="135">
   <properties>
-   <property name="color" value="yellow"/>
-   <property name="gid" value="key_yellow"/>
+   <property name="color" value="green"/>
+   <property name="gid" value="key_green"/>
    <property name="kind" value="key"/>
+   <property name="name" value="green key"/>
   </properties>
  </tile>
  <tile id="136">
@@ -127,6 +128,7 @@
    <property name="color" value="blue"/>
    <property name="gid" value="key_blue"/>
    <property name="kind" value="key"/>
+   <property name="name" value="blue key"/>
   </properties>
  </tile>
  <tile id="137">
@@ -134,6 +136,7 @@
    <property name="color" value="red"/>
    <property name="gid" value="key_red"/>
    <property name="kind" value="key"/>
+   <property name="name" value="red key"/>
   </properties>
  </tile>
  <tile id="143">

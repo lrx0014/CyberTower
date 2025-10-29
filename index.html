@@ -27,7 +27,7 @@
       </div>
       <div class="panel">
         <div class="headline">Inventory</div>
-        <div class="stat"><span>Keys</span><span id="keys">-</span></div>
+        <div id="inventory-list" class="inventory-list"></div>
       </div>
       <div class="panel">
         <div class="msg" id="msg">Welcome to Cyber Tower.</div>
@@ -58,14 +58,23 @@
         DEF
         <input id="debug-def" type="number" min="0" step="1" inputmode="numeric" />
       </label>
-      <label class="debug-field" for="debug-keys">
-        Keys (set total)
-        <input id="debug-keys" type="number" min="0" step="1" inputmode="numeric" />
-      </label>
       <div class="debug-actions">
         <button type="submit">Apply Stats</button>
       </div>
     </form>
+    <div class="debug-custom">
+      <label class="debug-field" for="debug-item-gid">
+        Item GID
+        <input id="debug-item-gid" type="text" />
+      </label>
+      <label class="debug-field" for="debug-item-qty">
+        Quantity
+        <input id="debug-item-qty" type="number" min="1" step="1" value="1" inputmode="numeric" />
+      </label>
+      <div class="debug-actions">
+        <button id="debug-item-apply" type="button">Grant Item</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

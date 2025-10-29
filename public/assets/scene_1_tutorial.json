@@ -91,9 +91,14 @@
                  "name":"",
                  "properties":[
                         {
+                         "name":"bonus",
+                         "type":"string",
+                         "value":"key_green"
+                        }, 
+                        {
                          "name":"kind",
                          "type":"string",
-                         "value":"item"
+                         "value":"quest"
                         }],
                  "rotation":0,
                  "type":"",
@@ -110,7 +115,7 @@
                         {
                          "name":"bonus",
                          "type":"string",
-                         "value":"key_yellow"
+                         "value":"key_green"
                         }, 
                         {
                          "name":"kind",
@@ -132,7 +137,7 @@
                         {
                          "name":"bonus",
                          "type":"string",
-                         "value":"key_yellow"
+                         "value":"key_green"
                         }, 
                         {
                          "name":"kind",
@@ -187,48 +192,63 @@
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"door"
+                         "value":"door_unlocker"
+                        }, 
+                        {
+                         "name":"require",
+                         "type":"string",
+                         "value":"key_green"
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":48,
-                 "x":288,
+                 "x":296.888888888889,
                  "y":145.333333333333
                 }, 
                 {
-                 "height":45.3333,
+                 "height":44.2221888888889,
                  "id":6,
                  "name":"",
                  "properties":[
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"door"
+                         "value":"door_unlocker"
+                        }, 
+                        {
+                         "name":"require",
+                         "type":"string",
+                         "value":"key_green"
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":48,
-                 "x":146.666666666667,
-                 "y":288.000016666667
+                 "x":143.333333333334,
+                 "y":281.33335
                 }, 
                 {
-                 "height":45.3333,
+                 "height":44.2221888888889,
                  "id":8,
                  "name":"",
                  "properties":[
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"door"
+                         "value":"door_unlocker"
+                        }, 
+                        {
+                         "name":"require",
+                         "type":"string",
+                         "value":"key_green"
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":48,
-                 "x":526.666666666667,
-                 "y":290.666683333333
+                 "x":528.888888888889,
+                 "y":299.555572222222
                 }, 
                 {
                  "height":45.3333,
@@ -238,13 +258,18 @@
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"door"
+                         "value":"door_unlocker"
+                        }, 
+                        {
+                         "name":"require",
+                         "type":"string",
+                         "value":"key_blue"
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":48,
-                 "x":577.333333333333,
+                 "width":50.2222222222222,
+                 "x":569.555555555555,
                  "y":528.000016666667
                 }, 
                 {
@@ -255,14 +280,19 @@
                         {
                          "name":"kind",
                          "type":"string",
-                         "value":"door"
+                         "value":"door_unlocker"
+                        }, 
+                        {
+                         "name":"require",
+                         "type":"string",
+                         "value":"key_green"
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":48,
                  "x":144,
-                 "y":481.33335
+                 "y":472.444461111111
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -333,7 +363,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":16,
+ "nextobjectid":17,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
@@ -640,17 +670,22 @@
                         {
                          "name":"color",
                          "type":"string",
-                         "value":"yellow"
+                         "value":"green"
                         }, 
                         {
                          "name":"gid",
                          "type":"string",
-                         "value":"key_yellow"
+                         "value":"key_green"
                         }, 
                         {
                          "name":"kind",
                          "type":"string",
                          "value":"key"
+                        }, 
+                        {
+                         "name":"name",
+                         "type":"string",
+                         "value":"green key"
                         }]
                 }, 
                 {
@@ -670,6 +705,11 @@
                          "name":"kind",
                          "type":"string",
                          "value":"key"
+                        }, 
+                        {
+                         "name":"name",
+                         "type":"string",
+                         "value":"blue key"
                         }]
                 }, 
                 {
@@ -689,6 +729,11 @@
                          "name":"kind",
                          "type":"string",
                          "value":"key"
+                        }, 
+                        {
+                         "name":"name",
+                         "type":"string",
+                         "value":"red key"
                         }]
                 }, 
                 {

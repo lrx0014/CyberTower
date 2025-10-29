@@ -22,11 +22,16 @@ export interface MonsterStats {
 export interface ItemData {
   type: 'hp' | 'atk' | 'def' | 'key';
   value: number;
+  gid?: string;
+  name?: string;
 }
 
 export interface DoorData {
   doorType: string;
   keyCost: number;
+  require?: string;
+  requireName?: string;
+  name?: string;
 }
 
 export interface PlayerState {
@@ -37,6 +42,7 @@ export interface PlayerState {
   atk: number;
   def: number;
   keys: number;
+  inventory: Record<string, number>;
 }
 
 export interface UIHooks {

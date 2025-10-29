@@ -2,8 +2,10 @@ import Phaser from 'phaser';
 import TutorialScene, {
   DEFAULT_GAME_HEIGHT,
   DEFAULT_GAME_WIDTH,
+  debugGrantInventoryItem,
   debugSetPlayerAttributes,
   getActiveScene,
+  getInventoryEntries,
   getPlayerSnapshot,
   registerUIHooks,
   resetPlayerState
@@ -15,9 +17,9 @@ const nameEl = document.getElementById('name');
 const hpEl = document.getElementById('hp');
 const atkEl = document.getElementById('atk');
 const defEl = document.getElementById('def');
-const keysEl = document.getElementById('keys');
 const resetButton = document.getElementById('reset');
 const hintButton = document.getElementById('hint');
+const inventoryList = document.getElementById('inventory-list');
 
 // for debug
 const debugToggle = document.getElementById('debug-toggle');
@@ -27,7 +29,9 @@ const debugForm = document.getElementById('debug-form');
 const debugHpInput = document.getElementById('debug-hp');
 const debugAtkInput = document.getElementById('debug-atk');
 const debugDefInput = document.getElementById('debug-def');
-const debugKeysInput = document.getElementById('debug-keys');
+const debugItemGidInput = document.getElementById('debug-item-gid');
+const debugItemQtyInput = document.getElementById('debug-item-qty');
+const debugItemApplyButton = document.getElementById('debug-item-apply');
 
 if (
   !(msgEl instanceof HTMLElement) ||
@@ -35,7 +39,7 @@ if (
   !(hpEl instanceof HTMLElement) ||
   !(atkEl instanceof HTMLElement) ||
   !(defEl instanceof HTMLElement) ||
-  !(keysEl instanceof HTMLElement) ||
+  !(inventoryList instanceof HTMLElement) ||
   !(resetButton instanceof HTMLButtonElement) ||
   !(hintButton instanceof HTMLButtonElement) ||
   !(debugToggle instanceof HTMLButtonElement) ||
@@ -45,7 +49,9 @@ if (
   !(debugHpInput instanceof HTMLInputElement) ||
   !(debugAtkInput instanceof HTMLInputElement) ||
   !(debugDefInput instanceof HTMLInputElement) ||
-  !(debugKeysInput instanceof HTMLInputElement)
+  !(debugItemGidInput instanceof HTMLInputElement) ||
+  !(debugItemQtyInput instanceof HTMLInputElement) ||
+  !(debugItemApplyButton instanceof HTMLButtonElement)
 ) {
   throw new Error('UI elements failed to mount.');
 }
@@ -59,7 +65,42 @@ const updateStats = (state: PlayerState) => {
   hpEl.textContent = `${state.hp}`;
   atkEl.textContent = `${state.atk}`;
   defEl.textContent = `${state.def}`;
-  keysEl.textContent = `${state.keys}`;
+  renderInventory(state);
+};
+
+const renderInventory = (state: PlayerState) => {
+  while (inventoryList.firstChild) {
+    inventoryList.removeChild(inventoryList.firstChild);
+  }
+
+  const entries = getInventoryEntries().filter((entry) => entry.count > 0);
+  if (state.keys > 0) {
+    entries.push({
+      gid: '__generic_key__',
+      name: 'Key',
+      count: state.keys
+    });
+  }
+
+  if (entries.length === 0) {
+    const emptyEl = document.createElement('div');
+    emptyEl.className = 'inventory-empty';
+    emptyEl.textContent = 'Empty';
+    inventoryList.appendChild(emptyEl);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const row = document.createElement('div');
+    row.className = 'stat';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = entry.name;
+    const valueSpan = document.createElement('span');
+    valueSpan.textContent = `${entry.count}`;
+    row.appendChild(nameSpan);
+    row.appendChild(valueSpan);
+    inventoryList.appendChild(row);
+  });
 };
 
 registerUIHooks({
@@ -115,7 +156,8 @@ const refreshDebugForm = () => {
   debugHpInput.value = `${snapshot.hp}`;
   debugAtkInput.value = `${snapshot.atk}`;
   debugDefInput.value = `${snapshot.def}`;
-  debugKeysInput.value = `${snapshot.keys}`;
+  debugItemGidInput.value = '';
+  debugItemQtyInput.value = '1';
 };
 
 debugToggle.addEventListener('click', () => {
@@ -135,12 +177,19 @@ debugForm.addEventListener('submit', (event) => {
   const hp = Number.parseInt(debugHpInput.value, 10);
   const atk = Number.parseInt(debugAtkInput.value, 10);
   const def = Number.parseInt(debugDefInput.value, 10);
-  const keys = Number.parseInt(debugKeysInput.value, 10);
   debugSetPlayerAttributes({
     hp: Number.isNaN(hp) ? undefined : hp,
     atk: Number.isNaN(atk) ? undefined : atk,
-    def: Number.isNaN(def) ? undefined : def,
-    keys: Number.isNaN(keys) ? undefined : keys
+    def: Number.isNaN(def) ? undefined : def
   });
   refreshDebugForm();
+});
+
+debugItemApplyButton.addEventListener('click', () => {
+  const gid = debugItemGidInput.value.trim();
+  const qty = Number.parseInt(debugItemQtyInput.value, 10);
+  if (!gid) return;
+  if (Number.isNaN(qty) || qty <= 0) return;
+  debugGrantInventoryItem(gid, qty);
+  debugItemQtyInput.value = '1';
 });

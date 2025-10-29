@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="15" height="15" tilewidth="48" tileheight="48" infinite="0" nextlayerid="7" nextobjectid="16">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="15" height="15" tilewidth="48" tileheight="48" infinite="0" nextlayerid="7" nextobjectid="17">
  <editorsettings>
   <export target="../../public/assets/scene_1_tutorial.json" format="json"/>
  </editorsettings>
@@ -121,9 +121,10 @@
   </tile>
   <tile id="135">
    <properties>
-    <property name="color" value="yellow"/>
-    <property name="gid" value="key_yellow"/>
+    <property name="color" value="green"/>
+    <property name="gid" value="key_green"/>
     <property name="kind" value="key"/>
+    <property name="name" value="green key"/>
    </properties>
   </tile>
   <tile id="136">
@@ -131,6 +132,7 @@
     <property name="color" value="blue"/>
     <property name="gid" value="key_blue"/>
     <property name="kind" value="key"/>
+    <property name="name" value="blue key"/>
    </properties>
   </tile>
   <tile id="137">
@@ -138,6 +140,7 @@
     <property name="color" value="red"/>
     <property name="gid" value="key_red"/>
     <property name="kind" value="key"/>
+    <property name="name" value="red key"/>
    </properties>
   </tile>
   <tile id="143">
@@ -285,18 +288,19 @@
  <objectgroup id="5" name="items">
   <object id="12" x="480.667" y="192" width="49.3333" height="50.6667">
    <properties>
-    <property name="kind" value="item"/>
+    <property name="bonus" value="key_green"/>
+    <property name="kind" value="quest"/>
    </properties>
   </object>
   <object id="11" x="144" y="192" width="49.3333" height="50.6667">
    <properties>
-    <property name="bonus" value="key_yellow"/>
+    <property name="bonus" value="key_green"/>
     <property name="kind" value="quest"/>
    </properties>
   </object>
   <object id="13" x="142" y="381.333" width="49.3333" height="50.6667">
    <properties>
-    <property name="bonus" value="key_yellow"/>
+    <property name="bonus" value="key_green"/>
     <property name="kind" value="quest"/>
    </properties>
   </object>
@@ -308,29 +312,34 @@
   </object>
  </objectgroup>
  <objectgroup id="6" name="doors">
-  <object id="4" x="288" y="145.333" width="48" height="45.3333">
+  <object id="4" x="296.889" y="145.333" width="48" height="45.3333">
    <properties>
-    <property name="kind" value="door"/>
+    <property name="kind" value="door_unlocker"/>
+    <property name="require" value="key_green"/>
    </properties>
   </object>
-  <object id="6" x="146.667" y="288" width="48" height="45.3333">
+  <object id="6" x="143.333" y="281.333" width="48" height="44.2222">
    <properties>
-    <property name="kind" value="door"/>
+    <property name="kind" value="door_unlocker"/>
+    <property name="require" value="key_green"/>
    </properties>
   </object>
-  <object id="8" x="526.667" y="290.667" width="48" height="45.3333">
+  <object id="8" x="528.889" y="299.556" width="48" height="44.2222">
    <properties>
-    <property name="kind" value="door"/>
+    <property name="kind" value="door_unlocker"/>
+    <property name="require" value="key_green"/>
    </properties>
   </object>
-  <object id="9" x="577.333" y="528" width="48" height="45.3333">
+  <object id="9" x="569.556" y="528" width="50.2222" height="45.3333">
    <properties>
-    <property name="kind" value="door"/>
+    <property name="kind" value="door_unlocker"/>
+    <property name="require" value="key_blue"/>
    </properties>
   </object>
-  <object id="5" x="144" y="481.333" width="48" height="45.3333">
+  <object id="5" x="144" y="472.444" width="48" height="45.3333">
    <properties>
-    <property name="kind" value="door"/>
+    <property name="kind" value="door_unlocker"/>
+    <property name="require" value="key_green"/>
    </properties>
   </object>
  </objectgroup>

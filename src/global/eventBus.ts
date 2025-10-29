@@ -135,6 +135,8 @@ export class EventBus {
       if (!event) {
         break;
       }
+      // eslint-disable-next-line no-console
+      console.log('[EventBus] dispatch', event.type, event);
       const handlers = this.handlers.get(event.type);
       if (!handlers || handlers.size === 0) {
         continue;
