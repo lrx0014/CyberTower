@@ -634,6 +634,7 @@ export class BaseTowerScene extends Phaser.Scene {
       gameEventBus.subscribe('encounter.item', handlers.itemPickup),
       gameEventBus.subscribe('encounter.monster', handlers.monsterEncounter),
       gameEventBus.subscribe('encounter.stairs', handlers.stairsEncounter),
+      gameEventBus.subscribe('article.unlock', handlers.articleUnlock),
       gameEventBus.subscribe('debug.console.log', handlers.debug),
     ];
   }

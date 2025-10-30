@@ -80,6 +80,15 @@ export type DebugEvent = GameEventBase<
   }
 >;
 
+export interface ArticleUnlockPayload {
+  articleId?: string;
+  article_id?: string;
+  id?: string;
+  [key: string]: unknown;
+}
+
+export type ArticleUnlockEvent = GameEventBase<'article.unlock', ArticleUnlockPayload>;
+
 export type GameEvent =
   | PlayerMoveAttemptEvent
   | PlayerMoveCommitEvent
@@ -88,7 +97,8 @@ export type GameEvent =
   | ItemPickupEvent
   | MonsterEncounterEvent
   | StairsEvent
-  | DebugEvent;
+  | DebugEvent
+  | ArticleUnlockEvent;
 
 export type GameEventType = GameEvent['type'];
 

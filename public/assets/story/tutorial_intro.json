@@ -34,7 +34,10 @@
       "id": "give_key",
       "speaker": "Mentor",
       "text": "Very well. Come and take this key. They are waiting for you.",
-      "next": "farewell"
+      "next": "farewell",
+      "events": [
+        { "type": "article.unlock", "payload": { "article_id": "welcome" } }
+      ]
     },
     {
       "id": "farewell",
@@ -46,7 +49,13 @@
         "max": 4,
         "message": "(Mentor hands you a gleaming green key.)",
         "limitMessage": "(You already claimed the mentor's key.)"
-      }
+      },
+      "next": "end"
+    },
+    {
+      "id": "end",
+      "speaker": "System",
+      "text": "(a new article <welcome> is available in your Traveler's journal)"
     }
   ]
 }

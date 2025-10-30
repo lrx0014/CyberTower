@@ -15,6 +15,7 @@ import { createItemPickupHandler } from './itemPickupHandler';
 import { createMonsterEncounterHandler } from './monsterEncounterHandler';
 import { createStairsEncounterHandler } from './stairsEncounterHandler';
 import { createDebugHandler } from './debugHandler';
+import { createArticleUnlockHandler } from './articleUnlockHandler';
 
 const fallbackFrom = (ctx: TowerEventContext): Vec2 => {
   const last = ctx.getLastMoveAttempt();
@@ -72,5 +73,6 @@ export function createTowerEventHandlers(ctx: TowerEventContext): TowerEventHand
     monsterEncounter: createMonsterEncounterHandler(ctx, helpers),
     stairsEncounter: createStairsEncounterHandler(ctx, helpers),
     debug: createDebugHandler(ctx, helpers),
+    articleUnlock: createArticleUnlockHandler(),
   };
 }

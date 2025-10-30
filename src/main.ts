@@ -13,6 +13,7 @@ import TutorialScene, {
 } from './scenes/TutorialScene';
 import type { DirectionInput } from './scenes/TutorialScene';
 import { PlayerState } from './global/types';
+import { initialiseJournalUI } from './journal/travelerJournal';
 
 const msgEl = document.getElementById('msg');
 const nameEl = document.getElementById('name');
@@ -22,6 +23,11 @@ const defEl = document.getElementById('def');
 const resetButton = document.getElementById('reset');
 const hintButton = document.getElementById('hint');
 const inventoryList = document.getElementById('inventory-list');
+const journalOpenButton = document.getElementById('journal-open');
+const journalModal = document.getElementById('journal-modal');
+const journalCloseButton = document.getElementById('journal-close');
+const journalNav = document.getElementById('journal-nav');
+const journalContent = document.getElementById('journal-content');
 
 // for debug
 const debugToggle = document.getElementById('debug-toggle');
@@ -46,6 +52,11 @@ if (
   !(atkEl instanceof HTMLElement) ||
   !(defEl instanceof HTMLElement) ||
   !(inventoryList instanceof HTMLElement) ||
+  !(journalOpenButton instanceof HTMLButtonElement) ||
+  !(journalModal instanceof HTMLElement) ||
+  !(journalCloseButton instanceof HTMLButtonElement) ||
+  !(journalNav instanceof HTMLElement) ||
+  !(journalContent instanceof HTMLElement) ||
   !(resetButton instanceof HTMLButtonElement) ||
   !(hintButton instanceof HTMLButtonElement) ||
   !(debugToggle instanceof HTMLButtonElement) ||
@@ -68,6 +79,14 @@ const invalidMobileButton = mobileButtons.find((btn) => !(btn instanceof HTMLBut
 if (invalidMobileButton) {
   throw new Error('Mobile controls failed to mount.');
 }
+
+initialiseJournalUI({
+  openButton: journalOpenButton,
+  closeButton: journalCloseButton,
+  modal: journalModal,
+  list: journalNav,
+  content: journalContent
+});
 
 const postMessage = (text: string) => {
   msgEl.textContent = text;

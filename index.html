@@ -18,6 +18,9 @@
         <div class="headline">Character</div>
         <div class="stat"><span>Name</span><span id="name">Hero</span></div>
         <div class="stat"><span>HP</span><span id="hp">-</span></div>
+        <div class="panel-controls">
+          <button id="journal-open" type="button">Traveler Journal</button>
+        </div>
       </div>
 
       <div class="panel">
@@ -88,6 +91,18 @@
       <div class="dialogue-controls">
         <button id="dialogue-prev" type="button">Prev</button>
         <button id="dialogue-next" type="button">Next</button>
+      </div>
+    </div>
+  </div>
+  <div id="journal-modal" class="journal-modal hidden">
+    <div class="journal-dialog">
+      <div class="journal-header">
+        <span>Traveler Journal</span>
+        <button id="journal-close" type="button" aria-label="Close journal">×</button>
+      </div>
+      <div class="journal-body">
+        <nav id="journal-nav" class="journal-nav"></nav>
+        <div id="journal-content" class="journal-content"></div>
       </div>
     </div>
   </div>
