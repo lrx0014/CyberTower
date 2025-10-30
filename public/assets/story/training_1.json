@@ -103,7 +103,16 @@
     {
       "id": "bye",
       "speaker": "Dr. Strong",
-      "text": "Story <The Quest for the Unbreakable Password> complete! More Cyber adventures await..."
+      "text": "Story <The Quest for the Unbreakable Password> complete! More Cyber adventures await...",
+      "next": "end"
+    },
+    {
+      "id": "end",
+      "speaker": "System",
+      "events": [
+        { "type": "article.unlock", "payload": { "article_id": "strong_password" } }
+      ],
+      "text": "(a new article <Strong Password Learn Guide> is available in your Traveler's journal)"
     }
   ]
 }

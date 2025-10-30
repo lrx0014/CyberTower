@@ -1,26 +1,149 @@
 {
   "id": "training_4",
-  "title": "How to play",
-  "start": "greeting",
+  "title": "The Phishy Waters of Cyber Bay",
+  "start": "intro",
   "nodes": [
     {
-      "id": "greeting",
-      "speaker": "Dr. Who",
-      "text": "(story <...> is in development...)",
+      "id": "intro",
+      "speaker": "Professor Fishbuster",
+      "text": "Ahoy! I'm Professor Fishbuster, master of the Anti-Phish Arts. The Hacker Lord has gone fishing—literally! His phishing e-mails lure unsuspecting victims into cyber doom! Have you heard of phishing?",
+      "options": [
+        { "text": "No… tell me!", "target": "basics" },
+        { "text": "Yes! I'm a cyber fisherman myself!", "target": "confidence" }
+      ]
+    },
+
+    {
+      "id": "confidence",
+      "speaker": "Hacker Lord",
+      "text": "Hehe… If you really know phishing, answer this: You receive an email promising free diamonds if you click the link. What do you do?",
+      "options": [
+        { "text": "Click! I want diamonds!", "target": "bad_choice" },
+        { "text": "NO! That's suspicious.", "target": "good_choice" }
+      ]
+    },
+
+    {
+      "id": "bad_choice",
+      "speaker": "Hacker Lord",
+      "text": "Bwahaha! Your treasure is MINE! You fell for the bait!",
+      "next": "basics"
+    },
+
+    {
+      "id": "good_choice",
+      "speaker": "Professor Fishbuster",
+      "text": "Well done! Free diamonds rarely exist… except in Minecraft. Let me teach you more.",
+      "next": "basics"
+    },
+
+    {
+      "id": "basics",
+      "speaker": "Professor Fishbuster",
+      "text": "Phishing is when attackers trick you into revealing secrets—like passwords or chocolate stash locations—by pretending to be someone trustworthy.",
+      "next": "signs_intro"
+    },
+
+    {
+      "id": "signs_intro",
+      "speaker": "Professor Fishbuster",
+      "text": "To survive the Phishy Waters, you must spot suspicious signs! Which sign do you want to learn first?",
+      "options": [
+        { "text": "Strange links", "target": "links" },
+        { "text": "Weird sender", "target": "sender" },
+        { "text": "Urgent tone", "target": "urgency" }
+      ]
+    },
+
+    {
+      "id": "links",
+      "speaker": "Professor Fishbuster",
+      "text": "Dangerous links lurk beneath harmless words. Always hover to inspect! If the address looks like `paypaI.com` (with a capital i), RUN!",
+      "next": "decision1"
+    },
+
+    {
+      "id": "sender",
+      "speaker": "Professor Fishbuster",
+      "text": "Check the sender carefully! An email from `security@amaz0n-help.ru` is NOT Amazon—unless Amazon moved.",
+      "next": "decision1"
+    },
+
+    {
+      "id": "urgency",
+      "speaker": "Professor Fishbuster",
+      "text": "Phishers love panic! 'ACCOUNT CLOSING IN 5 MINUTES!!!' Stay calm. Real companies rarely scream at you.",
+      "next": "decision1"
+    },
+
+    {
+      "id": "decision1",
+      "speaker": "Professor Fishbuster",
+      "text": "You receive an email claiming 'Your bank account is locked—verify now!' What do you do?",
+      "options": [
+        { "text": "Click the link and sign in", "target": "fail" },
+        { "text": "Go to the official website to check", "target": "safe" },
+        { "text": "Ignore and go eat pizza", "target": "safe_ish" }
+      ]
+    },
+
+    {
+      "id": "fail",
+      "speaker": "Hacker Lord",
+      "text": "SLURP—your data is delicious! You just fed me your password! Next time, think twice!",
+      "next": "ending_bad"
+    },
+
+    {
+      "id": "safe",
+      "speaker": "Professor Fishbuster",
+      "text": "Excellent! Always verify by going directly to the official site or app. The Hacker Lord hates careful people!",
+      "next": "final_quiz"
+    },
+
+    {
+      "id": "safe_ish",
+      "speaker": "Professor Fishbuster",
+      "text": "Ignoring is better than clicking, but verifying is BEST. Also… nice pizza.",
+      "next": "final_quiz"
+    },
+
+    {
+      "id": "final_quiz",
+      "speaker": "Professor Fishbuster",
+      "text": "Before you go, ONE last test: A friend messages you asking for money, says they lost their phone. What do you do?",
+      "options": [
+        { "text": "Send money immediately—friendship matters!", "target": "ending_bad" },
+        { "text": "Contact them through another channel to confirm", "target": "ending_good" }
+      ]
+    },
+
+    {
+      "id": "ending_good",
+      "speaker": "Professor Fishbuster",
+      "text": "Bravo! Phishers often pretend to be people you trust. Always double-check! You swim safely in Cyber Bay!",
       "next": "bye"
     },
+
+    {
+      "id": "ending_bad",
+      "speaker": "Hacker Lord",
+      "text": "Muahaha! You got hooked again! Another victim of the Cyber Bay!"
+    },
+
     {
       "id": "bye",
-      "speaker": "Dr. Who",
-      "text": "(bye...)",
+      "speaker": "Professor Fishbuster",
+      "text": "Story <The Phishy Waters of Cyber Bay> complete! Stay sharp, hero—there’s always another hook in the water!",
+      "next": "end"
+    },
+    {
+      "id": "end",
+      "speaker": "System",
       "events": [
-        {
-            "type": "debug.console.log",
-            "payload": {
-                "txt": "story debug from training_4"
-            }
-        }
-      ]
+        { "type": "article.unlock", "payload": { "article_id": "phishing" } }
+      ],
+      "text": "(a new article <Phishing Learn Guide> is available in your Traveler's journal)"
     }
   ]
 }

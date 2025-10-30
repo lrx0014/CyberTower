@@ -1,12 +1,159 @@
 {
   "id": "training_2",
-  "title": "What is MFA",
-  "start": "greeting",
+  "title": "The Two-Factorious Adventure",
+  "start": "intro",
   "nodes": [
     {
-      "id": "greeting",
-      "speaker": "Dr. Marry Frank Ali",
-      "text": "(story <What is MFA> is in development...)"
+      "id": "intro",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Greetings, traveler! I am Dr. Two-Factorious, protector of accounts everywhere! The Hacker Lord has learned new tricks—only the power of Multi-Factor Authentication can keep him out. Have you heard of MFA?",
+      "options": [
+        { "text": "No… what is that?", "target": "basics" },
+        { "text": "Yes! I’ve used it before.", "target": "confidence" }
+      ]
+    },
+
+    {
+      "id": "confidence",
+      "speaker": "Hacker Lord",
+      "text": "So you think you’re clever, huh? I’ll test you. If someone knows your password, can they get in without MFA?",
+      "options": [
+        { "text": "Yes, they can break in", "target": "correct" },
+        { "text": "No, password is enough!", "target": "wrong" }
+      ]
+    },
+
+    {
+      "id": "wrong",
+      "speaker": "Hacker Lord",
+      "text": "Muahaha! Without MFA, your account is mine! Passwords alone are too weak!",
+      "next": "basics"
+    },
+
+    {
+      "id": "correct",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Correct! MFA protects you even if your password leaks. Now learn more!",
+      "next": "types_intro"
+    },
+
+    {
+      "id": "basics",
+      "speaker": "Dr. Two-Factorious",
+      "text": "MFA is a security spell requiring more than just a password. You must prove who you are in multiple ways—like showing an ID *and* knowing a secret handshake.",
+      "next": "types_intro"
+    },
+
+    {
+      "id": "types_intro",
+      "speaker": "Dr. Two-Factorious",
+      "text": "There are three main authentication factors: Something you know (password), something you have (phone), and something you are (fingerprint). Which one interests you most?",
+      "options": [
+        { "text": "Something you know", "target": "knowledge" },
+        { "text": "Something you have", "target": "possession" },
+        { "text": "Something you are", "target": "biometric" }
+      ]
+    },
+
+    {
+      "id": "knowledge",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Passwords are useful, but alone they’re as fragile as a cookie in a dragon’s mouth. Let’s add more protection!",
+      "next": "enable"
+    },
+
+    {
+      "id": "possession",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Phones, security keys, and magic tokens! If a thief steals your password, they still need your device to enter.",
+      "next": "enable"
+    },
+
+    {
+      "id": "biometric",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Fingerprints, face scans—your personal features! Hard to copy… unless the Hacker Lord starts collecting noses. Ew!",
+      "next": "enable"
+    },
+
+    {
+      "id": "enable",
+      "speaker": "Dr. Two-Factorious",
+      "text": "You’re trying to protect your treasure chest account. Which MFA method will you use?",
+      "options": [
+        { "text": "Email / SMS code", "target": "sms" },
+        { "text": "Authenticator app", "target": "auth_app" },
+        { "text": "Hardware security key", "target": "hardware" },
+        { "text": "None… I trust the universe!", "target": "fail" }
+      ]
+    },
+
+    {
+      "id": "sms",
+      "speaker": "Hacker Lord",
+      "text": "Tch… SMS codes work, but I can sometimes steal them. Not bad though… I’ll retreat… for now!",
+      "next": "ending_good"
+    },
+
+    {
+      "id": "auth_app",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Great choice! Authenticator apps are safer than SMS. Your treasure is well-guarded!",
+      "next": "ending_better"
+    },
+
+    {
+      "id": "hardware",
+      "speaker": "Hacker Lord",
+      "text": "NOOO! A hardware key?! Impossible to steal digitally! You are too strong!",
+      "next": "ending_best"
+    },
+
+    {
+      "id": "fail",
+      "speaker": "Hacker Lord",
+      "text": "No MFA?! I just walked in and took everything. Easy win!",
+      "next": "ending_bad"
+    },
+
+    {
+      "id": "ending_good",
+      "speaker": "Dr. Two-Factorious",
+      "text": "You protected your account with MFA—nice work. But there’s still room to improve!"
+    },
+
+    {
+      "id": "ending_better",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Your defenses are strong! The Hacker Lord struggles to reach you. Stay vigilant!"
+    },
+
+    {
+      "id": "ending_best",
+      "speaker": "Dr. Two-Factorious",
+      "text": "You are unstoppable! With a hardware key and your mighty smarts, the cyber world applauds!",
+      "next": "bye"
+    },
+
+    {
+      "id": "ending_bad",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Next time, enable MFA… unless you enjoy losing treasure!"
+    },
+
+    {
+      "id": "bye",
+      "speaker": "Dr. Two-Factorious",
+      "text": "Story <The Two-Factorious Adventure> complete! Return when you seek more cyber power!",
+      "next": "end"
+    },
+    {
+      "id": "end",
+      "speaker": "System",
+      "events": [
+        { "type": "article.unlock", "payload": { "article_id": "mfa" } }
+      ],
+      "text": "(a new article <MFA Learn Guide> is available in your Traveler's journal)"
     }
   ]
 }
