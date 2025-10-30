@@ -31,7 +31,7 @@ class StoryManager {
   private history: string[] = [];
   private currentNode: StoryNode | null = null;
   private callbacks: StoryManagerOptions = {};
-  private basePath = '/assets/story';
+  private basePath = '/story';
   private initialised = false;
   private rewardMessages = new Map<string, string | null>();
 
