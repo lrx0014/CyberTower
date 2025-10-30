@@ -79,6 +79,7 @@ body {
   margin-top: 10px;
   display: flex;
   justify-content: flex-start;
+  gap: 8px;
 }
 
 .btns {
@@ -98,6 +99,17 @@ button {
 
 button:hover {
   background: #344056;
+}
+
+button:disabled {
+  background: #1d222c;
+  color: #6f7785;
+  cursor: not-allowed;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+button:disabled:hover {
+  background: #1d222c;
 }
 
 .msg {
