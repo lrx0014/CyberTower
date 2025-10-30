@@ -6,7 +6,21 @@
     {
       "id": "greeting",
       "speaker": "Dr. Who",
-      "text": "(story <...> is in development...)"
+      "text": "(story <...> is in development...)",
+      "next": "bye"
+    },
+    {
+      "id": "bye",
+      "speaker": "Dr. Who",
+      "text": "(bye...)",
+      "events": [
+        {
+            "type": "debug.console.log",
+            "payload": {
+                "txt": "story debug from training_4"
+            }
+        }
+      ]
     }
   ]
 }

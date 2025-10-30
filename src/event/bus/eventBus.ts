@@ -73,6 +73,13 @@ export type StairsEvent = GameEventBase<
   }
 >;
 
+export type DebugEvent = GameEventBase<
+  'debug.console.log',
+  {
+    txt: string;
+  }
+>;
+
 export type GameEvent =
   | PlayerMoveAttemptEvent
   | PlayerMoveCommitEvent
@@ -80,7 +87,8 @@ export type GameEvent =
   | DoorEncounterEvent
   | ItemPickupEvent
   | MonsterEncounterEvent
-  | StairsEvent;
+  | StairsEvent
+  | DebugEvent;
 
 export type GameEventType = GameEvent['type'];
 

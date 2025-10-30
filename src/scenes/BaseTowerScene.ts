@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import { Vec2, gameEventBus } from '../event/bus/eventBus';
+import { Vec2, gameEventBus, GameEvent, GameEventType } from '../event/bus/eventBus';
 import { createTowerEventHandlers } from '../event/events';
 import { DoorUnlockerInfo, TowerEventContext } from '../event/context';
 import storyManager from '../story/storyManager';
+import { StoryNodeEvent } from '../story/storyTypes';
 import { DoorData, ItemData, MonsterStats, PlayerState, TileKey, TileType, UIHooks } from '../global/types';
 
 export const DEFAULT_GAME_WIDTH = 48 * 15 + 24;
@@ -454,7 +455,8 @@ export class BaseTowerScene extends Phaser.Scene {
         this.lastMoveAttempt = null;
       },
       grantItem: (gid, amount, max) => this.grantStoryItem(gid, amount, max),
-      getInventoryName: (gid, fallback) => getInventoryName(gid, fallback)
+      getInventoryName: (gid, fallback) => getInventoryName(gid, fallback),
+      emitEvent: (event) => this.emitStoryEvent(event)
     });
     this.registerEventHandlers();
     gameEventBus.start();
@@ -631,7 +633,8 @@ export class BaseTowerScene extends Phaser.Scene {
       gameEventBus.subscribe('encounter.door', handlers.doorEncounter),
       gameEventBus.subscribe('encounter.item', handlers.itemPickup),
       gameEventBus.subscribe('encounter.monster', handlers.monsterEncounter),
-      gameEventBus.subscribe('encounter.stairs', handlers.stairsEncounter)
+      gameEventBus.subscribe('encounter.stairs', handlers.stairsEncounter),
+      gameEventBus.subscribe('debug.console.log', handlers.debug),
     ];
   }
 
@@ -732,6 +735,22 @@ export class BaseTowerScene extends Phaser.Scene {
 
   private removeObjectTile(position: Vec2) {
     this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
+  }
+
+  private emitStoryEvent(event: StoryNodeEvent) {
+    if (!event || typeof event.type !== 'string') return;
+    const type = event.type.trim();
+    if (!type) return;
+    const payload =
+      event.payload && typeof event.payload === 'object'
+        ? (event.payload as Record<string, unknown>)
+        : ({} as Record<string, unknown>);
+    const busEvent = {
+      type: type as GameEventType,
+      trigger: 'system',
+      payload: payload as never
+    } as GameEvent;
+    gameEventBus.enqueue(busEvent);
   }
 
   private grantStoryItem(gid: string, amount: number, max?: number) {

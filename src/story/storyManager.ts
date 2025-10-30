@@ -1,5 +1,5 @@
 import dialogueBox from './dialogueBox';
-import { StoryData, StoryNode } from './storyTypes';
+import { StoryData, StoryNode, StoryNodeEvent } from './storyTypes';
 
 interface StoryManagerOptions {
   onStart?: () => void;
@@ -7,6 +7,7 @@ interface StoryManagerOptions {
   basePath?: string;
   grantItem?: (gid: string, amount: number, max?: number) => StoryGrantResult;
   getInventoryName?: (gid: string, fallback?: string) => string;
+  emitEvent?: (event: StoryNodeEvent) => void;
 }
 
 interface StoryGrantResult {
@@ -104,6 +105,7 @@ class StoryManager {
     this.currentNode = node;
     const rewardMessage = this.processReward(node);
     this.rewardMessages.set(nodeId, rewardMessage);
+    this.dispatchNodeEvents(node);
     this.render();
   }
 
@@ -187,6 +189,14 @@ class StoryManager {
       return `You already have the maximum number of ${defaultName} (${limitAmount}).`;
     }
     return `You already have enough ${defaultName}.`;
+  }
+
+  private dispatchNodeEvents(node: StoryNode) {
+    const events = node.events ?? [];
+    if (events.length === 0 || !this.callbacks.emitEvent) return;
+    events.forEach((event) => {
+      this.callbacks.emitEvent?.(event);
+    });
   }
 
   async end() {

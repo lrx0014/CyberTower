@@ -11,6 +11,11 @@ export interface StoryReward {
   limitMessage?: string;
 }
 
+export interface StoryNodeEvent {
+  type: string;
+  payload?: Record<string, unknown>;
+}
+
 export interface StoryNode {
   id: string;
   speaker: string;
@@ -18,6 +23,7 @@ export interface StoryNode {
   next?: string;
   options?: StoryOption[];
   reward?: StoryReward;
+  events?: StoryNodeEvent[];
 }
 
 export interface StoryData {

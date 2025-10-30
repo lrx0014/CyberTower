@@ -58,6 +58,7 @@ export interface TowerEventHandlers {
   itemPickup: GameEventHandler<'encounter.item'>;
   monsterEncounter: GameEventHandler<'encounter.monster'>;
   stairsEncounter: GameEventHandler<'encounter.stairs'>;
+  debug: GameEventHandler<'debug.console.log'>;
 }
 
 export type DoorUnlockerMoveHandler = (tileKey: TileKey, destination: Vec2) => Promise<void>;
