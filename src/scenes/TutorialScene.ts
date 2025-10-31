@@ -29,6 +29,6 @@ export default class TutorialScene extends BaseTowerScene {
   }
 
   protected override handleStairsEncounter(_position: Vec2, _defaultAction: () => void): void {
-    this.scene.start('CombatScene');
+    this.scene.start('CombatScene', { floor: 1 });
   }
 }

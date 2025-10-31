@@ -324,12 +324,12 @@ export interface TowerSceneConfig {
 
 export class BaseTowerScene extends Phaser.Scene {
   protected readonly towerConfig: TowerSceneConfig;
-  protected readonly sceneDisplayName: string;
+  protected displayName: string;
 
   constructor(config: TowerSceneConfig) {
     super({ key: config.key });
     this.towerConfig = config;
-    this.sceneDisplayName = config.displayName;
+    this.displayName = config.displayName;
   }
 
   preload() {
@@ -447,11 +447,16 @@ export class BaseTowerScene extends Phaser.Scene {
     resetPlayerAnimationState();
     selectPlayerFrame(false);
     updateUI();
-    uiHooks?.updateLevelName(this.sceneDisplayName);
-    postMsg(`Entered ${this.sceneDisplayName}.`);
+    this.pushDisplayNameToUI();
+    postMsg(`Entered ${this.displayName}.`);
 
     if (this.objectsEntityLayer?.hasTileAt(spawn.x, spawn.y)) {
       this.objectsEntityLayer.removeTileAt(spawn.x, spawn.y);
+    }
+
+    if (this.playerSprite) {
+      this.playerSprite.destroy();
+      this.playerSprite = undefined;
     }
 
     this.renderPlayer();
@@ -857,12 +862,25 @@ export class BaseTowerScene extends Phaser.Scene {
       getItemData: (tileKey) => itemData.get(tileKey),
       getDoorData: (tileKey) => doorData.get(tileKey),
       getMonsterData: (tileKey) => monsterData.get(tileKey),
-      getSceneDisplayName: () => this.sceneDisplayName
+      getSceneDisplayName: () => this.displayName
     };
   }
 
   public getDisplayName(): string {
-    return this.sceneDisplayName;
+    return this.displayName;
+  }
+
+  protected setDisplayName(name: string) {
+    const trimmed = typeof name === 'string' ? name.trim() : '';
+    if (!trimmed || trimmed === this.displayName) return;
+    this.displayName = trimmed;
+    this.pushDisplayNameToUI();
+  }
+
+  private pushDisplayNameToUI() {
+    if (activeScene === this) {
+      uiHooks?.updateLevelName(this.displayName);
+    }
   }
 
   protected handleStairsEncounter(_position: Vec2, defaultAction: () => void) {
