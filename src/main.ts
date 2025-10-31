@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import CombatScene from './scenes/CombatScene';
 import TutorialScene, {
   DEFAULT_GAME_HEIGHT,
   DEFAULT_GAME_WIDTH,
@@ -151,7 +152,7 @@ const config: Phaser.Types.Core.GameConfig = {
     height: DEFAULT_GAME_HEIGHT
   },
   transparent: true,
-  scene: [TutorialScene]
+  scene: [TutorialScene, CombatScene]
 };
 
 const game = new Phaser.Game(config);

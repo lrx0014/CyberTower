@@ -1,3 +1,4 @@
+import type { Vec2 } from '../event/bus/eventBus';
 import { BaseTowerScene, TowerSceneConfig } from './BaseTowerScene';
 
 export type { DirectionInput } from './BaseTowerScene';
@@ -24,5 +25,9 @@ const TUTORIAL_SCENE_CONFIG: TowerSceneConfig = {
 export default class TutorialScene extends BaseTowerScene {
   constructor() {
     super(TUTORIAL_SCENE_CONFIG);
+  }
+
+  protected override handleStairsEncounter(_position: Vec2, _defaultAction: () => void): void {
+    this.scene.start('CombatScene');
   }
 }

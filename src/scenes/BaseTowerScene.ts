@@ -625,7 +625,9 @@ export class BaseTowerScene extends Phaser.Scene {
     this.unregisterEventHandlers();
     this.lastMoveAttempt = null;
     const context = this.createEventContext();
-    const handlers = createTowerEventHandlers(context);
+    const handlers = createTowerEventHandlers(context, {
+      onStairsEncounter: (position, defaultAction) => this.handleStairsEncounter(position, defaultAction)
+    });
     this.eventUnsubscribes = [
       gameEventBus.subscribe('player.move.attempt', handlers.moveAttempt),
       gameEventBus.subscribe('player.move.blocked', handlers.moveBlocked),
@@ -848,6 +850,10 @@ export class BaseTowerScene extends Phaser.Scene {
       getDoorData: (tileKey) => doorData.get(tileKey),
       getMonsterData: (tileKey) => monsterData.get(tileKey)
     };
+  }
+
+  protected handleStairsEncounter(_position: Vec2, defaultAction: () => void) {
+    defaultAction();
   }
 
   renderPlayer() {

@@ -13,7 +13,7 @@ import { createPlayerMoveCommitHandler } from './playerMoveCommitHandler';
 import { createDoorEncounterHandler } from './doorEncounterHandler';
 import { createItemPickupHandler } from './itemPickupHandler';
 import { createMonsterEncounterHandler } from './monsterEncounterHandler';
-import { createStairsEncounterHandler } from './stairsEncounterHandler';
+import { createStairsEncounterHandler, StairsEncounterHooks } from './stairsEncounterHandler';
 import { createDebugHandler } from './debugHandler';
 import { createArticleUnlockHandler } from './articleUnlockHandler';
 
@@ -60,7 +60,12 @@ const createHelpers = (ctx: TowerEventContext): TowerEventHelpers => ({
   }
 });
 
-export function createTowerEventHandlers(ctx: TowerEventContext): TowerEventHandlers {
+export interface TowerEventHooks extends StairsEncounterHooks {}
+
+export function createTowerEventHandlers(
+  ctx: TowerEventContext,
+  hooks: TowerEventHooks = {}
+): TowerEventHandlers {
   const helpers = createHelpers(ctx);
   const handleDoorUnlockerMove = createDoorUnlockerMoveHandler(ctx, helpers);
 
@@ -71,7 +76,7 @@ export function createTowerEventHandlers(ctx: TowerEventContext): TowerEventHand
     doorEncounter: createDoorEncounterHandler(ctx, helpers),
     itemPickup: createItemPickupHandler(ctx, helpers),
     monsterEncounter: createMonsterEncounterHandler(ctx, helpers),
-    stairsEncounter: createStairsEncounterHandler(ctx, helpers),
+    stairsEncounter: createStairsEncounterHandler(ctx, helpers, hooks),
     debug: createDebugHandler(ctx, helpers),
     articleUnlock: createArticleUnlockHandler(),
   };

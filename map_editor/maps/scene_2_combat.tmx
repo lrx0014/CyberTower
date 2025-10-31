@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="15" height="15" tilewidth="48" tileheight="48" infinite="0" nextlayerid="6" nextobjectid="25">
+ <editorsettings>
+  <export target="../../public/assets/scene_2_combat.json" format="json"/>
+ </editorsettings>
+ <tileset firstgid="1" name="sprite" tilewidth="48" tileheight="48" tilecount="182" columns="13">
+  <image source="../tiles/sprite.png" width="624" height="672"/>
+  <tile id="8">
+   <properties>
+    <property name="kind" value="mentor"/>
+   </properties>
+  </tile>
+  <tile id="9">
+   <properties>
+    <property name="kind" value="mentor"/>
+   </properties>
+  </tile>
+  <tile id="112">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="wing"/>
+   </properties>
+  </tile>
+  <tile id="113">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="wing"/>
+   </properties>
+  </tile>
+  <tile id="117">
+   <properties>
+    <property name="dir" value="down"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="0"/>
+   </properties>
+  </tile>
+  <tile id="118">
+   <properties>
+    <property name="dir" value="down"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="1"/>
+   </properties>
+  </tile>
+  <tile id="119">
+   <properties>
+    <property name="dir" value="default"/>
+    <property name="kind" value="player"/>
+   </properties>
+  </tile>
+  <tile id="120">
+   <properties>
+    <property name="dir" value="up"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="0"/>
+   </properties>
+  </tile>
+  <tile id="121">
+   <properties>
+    <property name="dir" value="up"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="1"/>
+   </properties>
+  </tile>
+  <tile id="122">
+   <properties>
+    <property name="dir" value="left"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="0"/>
+   </properties>
+  </tile>
+  <tile id="123">
+   <properties>
+    <property name="dir" value="left"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="1"/>
+   </properties>
+  </tile>
+  <tile id="124">
+   <properties>
+    <property name="dir" value="right"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="0"/>
+   </properties>
+  </tile>
+  <tile id="125">
+   <properties>
+    <property name="dir" value="right"/>
+    <property name="kind" value="player"/>
+    <property name="seq" value="1"/>
+   </properties>
+  </tile>
+  <tile id="130">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="sword"/>
+   </properties>
+  </tile>
+  <tile id="131">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="sword"/>
+   </properties>
+  </tile>
+  <tile id="132">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="sword"/>
+   </properties>
+  </tile>
+  <tile id="133">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="sword"/>
+   </properties>
+  </tile>
+  <tile id="134">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="sword"/>
+   </properties>
+  </tile>
+  <tile id="135">
+   <properties>
+    <property name="color" value="green"/>
+    <property name="gid" value="key_green"/>
+    <property name="kind" value="key"/>
+    <property name="name" value="green key"/>
+   </properties>
+  </tile>
+  <tile id="136">
+   <properties>
+    <property name="color" value="blue"/>
+    <property name="gid" value="key_blue"/>
+    <property name="kind" value="key"/>
+    <property name="name" value="blue key"/>
+   </properties>
+  </tile>
+  <tile id="137">
+   <properties>
+    <property name="color" value="red"/>
+    <property name="gid" value="key_red"/>
+    <property name="kind" value="key"/>
+    <property name="name" value="red key"/>
+   </properties>
+  </tile>
+  <tile id="143">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="shield"/>
+   </properties>
+  </tile>
+  <tile id="144">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="shield"/>
+   </properties>
+  </tile>
+  <tile id="145">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="shield"/>
+   </properties>
+  </tile>
+  <tile id="146">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="shield"/>
+   </properties>
+  </tile>
+  <tile id="147">
+   <properties>
+    <property name="kind" value="item"/>
+    <property name="name" value="shield"/>
+   </properties>
+  </tile>
+  <tile id="148">
+   <properties>
+    <property name="color" value="yellow"/>
+    <property name="kind" value="door"/>
+   </properties>
+  </tile>
+  <tile id="149">
+   <properties>
+    <property name="color" value="blue"/>
+    <property name="kind" value="door"/>
+   </properties>
+  </tile>
+  <tile id="150">
+   <properties>
+    <property name="color" value="red"/>
+    <property name="kind" value="door"/>
+   </properties>
+  </tile>
+  <tile id="157">
+   <properties>
+    <property name="dir" value="down"/>
+    <property name="kind" value="stairs"/>
+   </properties>
+  </tile>
+  <tile id="158">
+   <properties>
+    <property name="dir" value="up"/>
+    <property name="kind" value="stairs"/>
+   </properties>
+  </tile>
+  <tile id="162">
+   <properties>
+    <property name="color" value="blue"/>
+    <property name="kind" value="item"/>
+    <property name="name" value="diamond"/>
+   </properties>
+  </tile>
+  <tile id="163">
+   <properties>
+    <property name="color" value="red"/>
+    <property name="kind" value="item"/>
+    <property name="name" value="diamond"/>
+   </properties>
+  </tile>
+  <tile id="175">
+   <properties>
+    <property name="kind" value="item"/>
+   </properties>
+  </tile>
+  <tile id="176">
+   <properties>
+    <property name="kind" value="item"/>
+   </properties>
+  </tile>
+ </tileset>
+ <layer id="1" name="ground" width="15" height="15">
+  <data encoding="csv">
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157,
+157,157,157,157,157,157,157,157,157,157,157,157,157,157,157
+</data>
+ </layer>
+ <layer id="2" name="walls" width="15" height="15">
+  <data encoding="csv">
+171,171,171,171,171,171,171,171,171,171,171,171,171,171,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,171,0,0,0,171,
+171,171,171,171,171,171,171,171,171,171,171,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,0,0,171,171,171,171,171,171,171,171,171,171,171,171,
+171,0,0,171,0,0,0,0,0,0,0,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,171,171,171,171,171,171,171,171,171,171,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,0,0,0,0,0,0,0,0,0,0,0,0,0,171,
+171,171,171,171,171,171,171,171,171,171,171,171,171,171,171
+</data>
+ </layer>
+ <layer id="4" name="objects_entity" width="15" height="15">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,159,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,29,0,0,0,5,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="5" name="objects">
+  <object id="18" x="145.556" y="482.222" width="46.6667" height="44.4444">
+   <properties>
+    <property name="basic_atk" type="int" value="2"/>
+    <property name="basic_hp" type="int" value="10"/>
+    <property name="kind" value="monster"/>
+    <property name="name" value="Slime"/>
+   </properties>
+  </object>
+  <object id="19" x="431.111" y="240" width="46.6667" height="44.4444">
+   <properties>
+    <property name="basic_atk" type="int" value="2"/>
+    <property name="basic_hp" type="int" value="10"/>
+    <property name="kind" value="monster"/>
+    <property name="name" value="Slime"/>
+   </properties>
+  </object>
+  <object id="20" x="287.778" y="96.6667" width="46.6667" height="44.4444">
+   <properties>
+    <property name="basic_atk" type="int" value="2"/>
+    <property name="basic_hp" type="int" value="10"/>
+    <property name="kind" value="monster"/>
+    <property name="name" value="Slime"/>
+   </properties>
+  </object>
+  <object id="21" x="88.8889" y="96.6667" width="62.2223" height="53.3333">
+   <properties>
+    <property name="basic_atk" type="int" value="2"/>
+    <property name="basic_hp" type="int" value="10"/>
+    <property name="kind" value="monster"/>
+    <property name="name" value="Skeleton"/>
+   </properties>
+  </object>
+  <object id="23" x="51.7778" y="621.111" width="45.3333" height="46.6667">
+   <properties>
+    <property name="kind" value="player"/>
+   </properties>
+  </object>
+  <object id="24" x="47.7778" y="52" width="46.6667" height="42.6667">
+   <properties>
+    <property name="kind" value="stairs"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>
