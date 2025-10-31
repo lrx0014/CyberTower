@@ -11,6 +11,10 @@ export const DEFAULT_GAME_WIDTH = 48 * 15 + 24;
 export const DEFAULT_GAME_HEIGHT = 48 * 15 + 24;
 
 const CACHE_BUST = Date.now();
+const INTRO_FADE_DURATION = 500;
+const OUTRO_FADE_DURATION = 500;
+const BANNER_FADE_DURATION = 400;
+const BANNER_DISPLAY_DURATION = 2000;
 
 let CELL = 48;
 let COLS = 0;
@@ -393,17 +397,30 @@ export class BaseTowerScene extends Phaser.Scene {
   private monstersLayer?: Phaser.Tilemaps.TilemapLayer;
   private objectsEntityLayer?: Phaser.Tilemaps.TilemapLayer;
   private playerSprite?: Phaser.GameObjects.Sprite;
+  private bannerText?: Phaser.GameObjects.Text;
+  private isTransitioning = false;
   private pendingSnapshot: TowerSceneSnapshot | null = null;
   private eventUnsubscribes: Array<() => void> = [];
   private lastMoveAttempt: { from: { x: number; y: number }; to: { x: number; y: number } } | null = null;
 
   create() {
     activeScene = this;
+    this.isTransitioning = false;
+    if (this.input) {
+      this.input.enabled = true;
+      if (this.input.keyboard) {
+        this.input.keyboard.enabled = true;
+      }
+    }
     const teardown = () => {
       if (activeScene === this) activeScene = null;
       this.unregisterEventHandlers();
       this.lastMoveAttempt = null;
       gameEventBus.stop();
+      if (this.bannerText) {
+        this.bannerText.destroy();
+        this.bannerText = undefined;
+      }
     };
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, teardown);
@@ -553,6 +570,7 @@ export class BaseTowerScene extends Phaser.Scene {
     });
 
     this.centerOnPlayer();
+    this.playSceneIntro();
   }
 
   private processObject(layerName: string, obj: Phaser.Types.Tilemaps.TiledObject) {
@@ -1020,6 +1038,26 @@ export class BaseTowerScene extends Phaser.Scene {
     defaultAction();
   }
 
+  protected transitionToScene(startNext: () => void, duration = OUTRO_FADE_DURATION) {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+    if (this.input) {
+      this.input.enabled = false;
+      if (this.input.keyboard) {
+        this.input.keyboard.enabled = false;
+      }
+    }
+    if (this.bannerText) {
+      this.bannerText.destroy();
+      this.bannerText = undefined;
+    }
+    const camera = this.cameras.main;
+    camera.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      startNext();
+    });
+    camera.fadeOut(duration, 0, 0, 0);
+  }
+
   renderPlayer() {
     if (!state) return;
     const x = state.px * CELL + CELL / 2;
@@ -1037,5 +1075,59 @@ export class BaseTowerScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setZoom(1);
     cam.setViewport(0, 0, COLS * CELL, ROWS * CELL);
+  }
+
+  private playSceneIntro() {
+    const camera = this.cameras.main;
+    camera.fadeIn(INTRO_FADE_DURATION, 0, 0, 0);
+    this.showSceneBanner();
+  }
+
+  private showSceneBanner() {
+    if (!this.displayName) return;
+    if (this.bannerText) {
+      this.bannerText.destroy();
+    }
+    const camera = this.cameras.main;
+    const midPoint = camera.midPoint;
+    const text = this.add
+      .text(midPoint.x, midPoint.y, this.displayName, {
+        fontSize: '48px',
+        fontFamily: '"Trebuchet MS", sans-serif',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 8,
+        align: 'center'
+      })
+      .setOrigin(0.5)
+      .setDepth(1000)
+      .setScrollFactor(0)
+      .setAlpha(0)
+      .setScale(0.9);
+    this.bannerText = text;
+
+    this.tweens.add({
+      targets: text,
+      alpha: 1,
+      scale: 1,
+      duration: BANNER_FADE_DURATION,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(BANNER_DISPLAY_DURATION, () => {
+          this.tweens.add({
+            targets: text,
+            alpha: 0,
+            duration: BANNER_FADE_DURATION,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+              text.destroy();
+              if (this.bannerText === text) {
+                this.bannerText = undefined;
+              }
+            }
+          });
+        });
+      }
+    });
   }
 }

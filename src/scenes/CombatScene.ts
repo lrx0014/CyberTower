@@ -38,21 +38,27 @@ export default class CombatScene extends BaseTowerScene {
     CombatScene.floorSnapshots.set(this.currentFloor, this.captureSceneState());
 
     if (info.direction === 'up') {
-      this.scene.start('CombatScene', { floor: this.currentFloor + 1 });
+      this.transitionToScene(() => {
+        this.scene.start('CombatScene', { floor: this.currentFloor + 1 });
+      });
       return;
     }
 
     if (info.direction === 'down') {
       const previousFloor = this.currentFloor - 1;
       if (previousFloor < 1) {
-        this.scene.start('TutorialScene');
+        this.transitionToScene(() => {
+          this.scene.start('TutorialScene');
+        });
         return;
       }
       if (!CombatScene.floorSnapshots.has(previousFloor)) {
         defaultAction();
         return;
       }
-      this.scene.start('CombatScene', { floor: previousFloor });
+      this.transitionToScene(() => {
+        this.scene.start('CombatScene', { floor: previousFloor });
+      });
       return;
     }
 

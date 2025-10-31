@@ -40,6 +40,8 @@ export default class TutorialScene extends BaseTowerScene {
       return;
     }
     TutorialScene.snapshot = this.captureSceneState();
-    this.scene.start('CombatScene', { floor: 1, reset: true });
+    this.transitionToScene(() => {
+      this.scene.start('CombatScene', { floor: 1, reset: true });
+    });
   }
 }
