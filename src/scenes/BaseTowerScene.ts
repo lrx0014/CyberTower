@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Vec2, gameEventBus, GameEvent, GameEventType } from '../event/bus/eventBus';
 import { createTowerEventHandlers } from '../event/events';
+import type { StairsEncounterInfo } from '../event/events';
 import { DoorUnlockerInfo, TowerEventContext } from '../event/context';
 import storyManager from '../story/storyManager';
 import { StoryNodeEvent } from '../story/storyTypes';
@@ -25,6 +26,7 @@ const doorData = new Map<TileKey, DoorData>();
 const itemCatalog = new Map<string, { name?: string }>();
 const doorUnlockers = new Map<TileKey, DoorUnlockerInfo>();
 const storyTriggers = new Map<TileKey, { storyId: string; once: boolean }>();
+const stairsData = new Map<TileKey, { direction: 'up' | 'down' }>();
 
 type Facing = 'up' | 'down' | 'left' | 'right';
 
@@ -42,6 +44,53 @@ let playerCurrentFrame = 0;
 
 let uiHooks: UIHooks | null = null;
 let activeScene: BaseTowerScene | null = null;
+
+const cloneData = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
+const clone2DArray = (source: TileType[][]): TileType[][] => source.map((row) => [...row]);
+
+const collectLayerKeys = (layer?: Phaser.Tilemaps.TilemapLayer): TileKey[] => {
+  if (!layer) return [];
+  const keys: TileKey[] = [];
+  layer.forEachTile((tile) => {
+    if (!tile || tile.index < 0) return;
+    keys.push(`${tile.x},${tile.y}` as TileKey);
+  });
+  return keys;
+};
+
+const applyLayerKeys = (layer: Phaser.Tilemaps.TilemapLayer | undefined, allowedKeys: TileKey[]) => {
+  if (!layer) return;
+  const allowed = new Set(allowedKeys);
+  layer.forEachTile((tile) => {
+    if (!tile || tile.index < 0) return;
+    const key = `${tile.x},${tile.y}` as TileKey;
+    if (!allowed.has(key)) {
+      layer.removeTileAt(tile.x, tile.y);
+    }
+  });
+};
+
+export interface TileLayerSnapshot {
+  items: TileKey[];
+  monsters: TileKey[];
+  doors: TileKey[];
+  objects: TileKey[];
+}
+
+export interface TowerSceneSnapshot {
+  map: TileType[][];
+  monsterData: Array<[TileKey, MonsterStats]>;
+  itemData: Array<[TileKey, ItemData]>;
+  doorData: Array<[TileKey, DoorData]>;
+  doorUnlockers: Array<[TileKey, DoorUnlockerInfo]>;
+  storyTriggers: Array<[TileKey, { storyId: string; once: boolean }]>;
+  playerPosition: Vec2;
+  playerFacing: Facing;
+  playerAnimStep: number;
+  playerFrame: number;
+  layerSnapshot: TileLayerSnapshot;
+}
 
 function normalizeFrameList(frames: Array<number | undefined>, fallback: number): number[] {
   const ordered: number[] = [];
@@ -344,6 +393,7 @@ export class BaseTowerScene extends Phaser.Scene {
   private monstersLayer?: Phaser.Tilemaps.TilemapLayer;
   private objectsEntityLayer?: Phaser.Tilemaps.TilemapLayer;
   private playerSprite?: Phaser.GameObjects.Sprite;
+  private pendingSnapshot: TowerSceneSnapshot | null = null;
   private eventUnsubscribes: Array<() => void> = [];
   private lastMoveAttempt: { from: { x: number; y: number }; to: { x: number; y: number } } | null = null;
 
@@ -406,6 +456,7 @@ export class BaseTowerScene extends Phaser.Scene {
     itemCatalog.clear();
     doorUnlockers.clear();
     storyTriggers.clear();
+    stairsData.clear();
     seedItemCatalogFromTiles(tm);
     playerName = 'Hero';
 
@@ -443,16 +494,32 @@ export class BaseTowerScene extends Phaser.Scene {
       throw new Error('Objects layer did not provide a player spawn (kind=player).');
     }
 
-    state = { name: playerName, px: spawn.x, py: spawn.y, hp: 100, atk: 0, def: 0, keys: 0, inventory: {} };
+    const snapshot = this.pendingSnapshot ? cloneData(this.pendingSnapshot) : null;
+    this.pendingSnapshot = null;
+    const isReturning = snapshot !== null;
+
+    if (!state) {
+      state = { name: playerName, px: spawn.x, py: spawn.y, hp: 100, atk: 0, def: 0, keys: 0, inventory: {} };
+    } else {
+      state.name = playerName;
+    }
+
     resetPlayerAnimationState();
     selectPlayerFrame(false);
+
+    if (snapshot) {
+      this.restoreSceneState(snapshot);
+    } else if (state) {
+      state.px = spawn.x;
+      state.py = spawn.y;
+      if (this.objectsEntityLayer?.hasTileAt(spawn.x, spawn.y)) {
+        this.objectsEntityLayer.removeTileAt(spawn.x, spawn.y);
+      }
+    }
+
     updateUI();
     this.pushDisplayNameToUI();
-    postMsg(`Entered ${this.displayName}.`);
-
-    if (this.objectsEntityLayer?.hasTileAt(spawn.x, spawn.y)) {
-      this.objectsEntityLayer.removeTileAt(spawn.x, spawn.y);
-    }
+    postMsg(isReturning ? `Returned to ${this.displayName}.` : `Entered ${this.displayName}.`);
 
     if (this.playerSprite) {
       this.playerSprite.destroy();
@@ -617,9 +684,13 @@ export class BaseTowerScene extends Phaser.Scene {
         });
         break;
       }
-      case 'stairs':
+      case 'stairs': {
         map![gy][gx] = TileType.STAIRS;
+        const rawDir = typeof props.dir === 'string' ? props.dir.trim().toLowerCase() : undefined;
+        const direction: 'up' | 'down' = rawDir === 'down' ? 'down' : 'up';
+        stairsData.set(key, { direction });
         break;
+      }
       case 'monster':
         map![gy][gx] = TileType.MONSTER;
         monsterData.set(key, {
@@ -639,7 +710,7 @@ export class BaseTowerScene extends Phaser.Scene {
     this.lastMoveAttempt = null;
     const context = this.createEventContext();
     const handlers = createTowerEventHandlers(context, {
-      onStairsEncounter: (position, defaultAction) => this.handleStairsEncounter(position, defaultAction)
+      onStairsEncounter: (info, defaultAction) => this.handleStairsEncounter(info, defaultAction)
     });
     this.eventUnsubscribes = [
       gameEventBus.subscribe('player.move.attempt', handlers.moveAttempt),
@@ -862,8 +933,70 @@ export class BaseTowerScene extends Phaser.Scene {
       getItemData: (tileKey) => itemData.get(tileKey),
       getDoorData: (tileKey) => doorData.get(tileKey),
       getMonsterData: (tileKey) => monsterData.get(tileKey),
-      getSceneDisplayName: () => this.displayName
+      getSceneDisplayName: () => this.displayName,
+      getStairsData: (tileKey) => stairsData.get(tileKey)
     };
+  }
+
+  protected setPendingSceneSnapshot(snapshot: TowerSceneSnapshot | null) {
+    this.pendingSnapshot = snapshot ? cloneData(snapshot) : null;
+  }
+
+  protected captureSceneState(): TowerSceneSnapshot {
+    if (!map || !state) {
+      throw new Error('Cannot capture scene state before initialisation.');
+    }
+    const layerSnapshot: TileLayerSnapshot = {
+      items: collectLayerKeys(this.itemsLayer),
+      monsters: collectLayerKeys(this.monstersLayer),
+      doors: collectLayerKeys(this.doorsLayer),
+      objects: collectLayerKeys(this.objectsEntityLayer)
+    };
+    return {
+      map: clone2DArray(map),
+      monsterData: Array.from(monsterData.entries()).map(([key, value]) => [key, cloneData(value)]),
+      itemData: Array.from(itemData.entries()).map(([key, value]) => [key, cloneData(value)]),
+      doorData: Array.from(doorData.entries()).map(([key, value]) => [key, cloneData(value)]),
+      doorUnlockers: Array.from(doorUnlockers.entries()).map(([key, value]) => [key, cloneData(value)]),
+      storyTriggers: Array.from(storyTriggers.entries()).map(([key, value]) => [key, cloneData(value)]),
+      playerPosition: { x: state.px, y: state.py },
+      playerFacing,
+      playerAnimStep,
+      playerFrame: playerCurrentFrame,
+      layerSnapshot
+    };
+  }
+
+  protected restoreSceneState(snapshot: TowerSceneSnapshot) {
+    if (!state) return;
+    map = clone2DArray(snapshot.map);
+
+    const repopulate = <T>(target: Map<TileKey, T>, entries: Array<[TileKey, T]>) => {
+      target.clear();
+      entries.forEach(([key, value]) => {
+        target.set(key, cloneData(value));
+      });
+    };
+
+    repopulate(monsterData, snapshot.monsterData);
+    repopulate(itemData, snapshot.itemData);
+    repopulate(doorData, snapshot.doorData);
+    repopulate(doorUnlockers, snapshot.doorUnlockers);
+    repopulate(storyTriggers, snapshot.storyTriggers);
+
+    state.px = snapshot.playerPosition.x;
+    state.py = snapshot.playerPosition.y;
+
+    playerFacing = snapshot.playerFacing;
+    playerAnimStep = snapshot.playerAnimStep;
+    playerCurrentFrame = snapshot.playerFrame;
+
+    applyLayerKeys(this.itemsLayer, snapshot.layerSnapshot.items);
+    applyLayerKeys(this.monstersLayer, snapshot.layerSnapshot.monsters);
+    applyLayerKeys(this.doorsLayer, snapshot.layerSnapshot.doors);
+    applyLayerKeys(this.objectsEntityLayer, snapshot.layerSnapshot.objects);
+
+    this.lastMoveAttempt = null;
   }
 
   public getDisplayName(): string {
@@ -883,7 +1016,7 @@ export class BaseTowerScene extends Phaser.Scene {
     }
   }
 
-  protected handleStairsEncounter(_position: Vec2, defaultAction: () => void) {
+  protected handleStairsEncounter(_info: StairsEncounterInfo, defaultAction: () => void) {
     defaultAction();
   }
 

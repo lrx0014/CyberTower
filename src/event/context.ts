@@ -39,6 +39,7 @@ export interface TowerEventContext {
   getDoorData: (tileKey: TileKey) => DoorData | undefined;
   getMonsterData: (tileKey: TileKey) => MonsterStats | undefined;
   getSceneDisplayName: () => string;
+  getStairsData: (tileKey: TileKey) => { direction: 'up' | 'down' } | undefined;
 }
 
 export interface TowerEventHelpers {

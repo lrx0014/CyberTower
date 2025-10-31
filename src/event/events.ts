@@ -17,6 +17,8 @@ import { createStairsEncounterHandler, StairsEncounterHooks } from './stairsEnco
 import { createDebugHandler } from './debugHandler';
 import { createArticleUnlockHandler } from './articleUnlockHandler';
 
+export type { StairsEncounterInfo } from './stairsEncounterHandler';
+
 const fallbackFrom = (ctx: TowerEventContext): Vec2 => {
   const last = ctx.getLastMoveAttempt();
   if (last) return last.from;

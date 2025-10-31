@@ -70,6 +70,8 @@ export type StairsEvent = GameEventBase<
   'encounter.stairs',
   {
     position: Vec2;
+    tileKey: TileKey;
+    direction: 'up' | 'down';
   }
 >;
 

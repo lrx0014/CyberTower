@@ -53,7 +53,12 @@ export const createPlayerMoveAttemptHandler = (
     }
 
     if (tileType === TileType.STAIRS) {
-      gameEventBus.enqueue({ type: 'encounter.stairs', trigger: 'system', payload: { position: to } });
+      const stairsInfo = ctx.getStairsData(tileKey);
+      gameEventBus.enqueue({
+        type: 'encounter.stairs',
+        trigger: 'system',
+        payload: { position: to, tileKey, direction: stairsInfo?.direction ?? 'up' }
+      });
       return;
     }
 

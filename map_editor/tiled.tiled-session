@@ -68,7 +68,7 @@
     "openFiles": [
     ],
     "project": "tiled.tiled-project",
-    "property.type": "int",
+    "property.type": "string",
     "recentFiles": [
         "tiles/sprite.tsx",
         "/Users/lirenxiang/WorkSpace/github/CyberGame/sunny-land/assets/maps/map.json"

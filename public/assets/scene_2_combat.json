@@ -65,10 +65,10 @@
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 158, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":15,
          "id":4,
@@ -227,14 +227,19 @@
                  "type":"",
                  "visible":true,
                  "width":45.3333,
-                 "x":51.7777944444445,
-                 "y":621.111094444444
+                 "x":142.888905555556,
+                 "y":624.444427777778
                 }, 
                 {
                  "height":42.6667,
                  "id":24,
                  "name":"",
                  "properties":[
+                        {
+                         "name":"dir",
+                         "type":"string",
+                         "value":"up"
+                        }, 
                         {
                          "name":"kind",
                          "type":"string",
@@ -246,6 +251,60 @@
                  "width":46.6667,
                  "x":47.7777611111111,
                  "y":51.9999833333333
+                }, 
+                {
+                 "height":42.6667,
+                 "id":25,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"dir",
+                         "type":"string",
+                         "value":"down"
+                        }, 
+                        {
+                         "name":"kind",
+                         "type":"string",
+                         "value":"stairs"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":46.6667,
+                 "x":52.2222055555556,
+                 "y":624.222205555556
+                }, 
+                {
+                 "height":44.4444,
+                 "id":26,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"basic_atk",
+                         "type":"int",
+                         "value":2
+                        }, 
+                        {
+                         "name":"basic_hp",
+                         "type":"int",
+                         "value":10
+                        }, 
+                        {
+                         "name":"kind",
+                         "type":"string",
+                         "value":"monster"
+                        }, 
+                        {
+                         "name":"name",
+                         "type":"string",
+                         "value":"Bat"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":46.6667,
+                 "x":576.66665,
+                 "y":480.000022222222
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -254,7 +313,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":25,
+ "nextobjectid":27,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

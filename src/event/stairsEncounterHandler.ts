@@ -1,9 +1,16 @@
 import type { Vec2 } from './bus/eventBus';
+import type { TileKey } from '../global/types';
 import { GameEventHandler } from './bus/eventBus';
 import { TowerEventContext, TowerEventHelpers } from './context';
 
+export interface StairsEncounterInfo {
+  position: Vec2;
+  tileKey: TileKey;
+  direction: 'up' | 'down';
+}
+
 export interface StairsEncounterHooks {
-  onStairsEncounter?: (position: Vec2, defaultAction: () => void) => void | Promise<void>;
+  onStairsEncounter?: (info: StairsEncounterInfo, defaultAction: () => void) => void | Promise<void>;
 }
 
 export const createStairsEncounterHandler = (
@@ -13,6 +20,11 @@ export const createStairsEncounterHandler = (
 ): GameEventHandler<'encounter.stairs'> => {
   return async (event) => {
     const position = event.payload.position;
+    const info: StairsEncounterInfo = {
+      position,
+      tileKey: event.payload.tileKey,
+      direction: event.payload.direction
+    };
     const defaultAction = () => {
       const sceneName = ctx.getSceneDisplayName();
       ctx.postMsg(`${sceneName} complete!`);
@@ -21,7 +33,7 @@ export const createStairsEncounterHandler = (
     };
 
     if (hooks?.onStairsEncounter) {
-      await hooks.onStairsEncounter(position, defaultAction);
+      await hooks.onStairsEncounter(info, defaultAction);
       return;
     }
 

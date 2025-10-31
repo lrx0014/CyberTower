@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="15" height="15" tilewidth="48" tileheight="48" infinite="0" nextlayerid="6" nextobjectid="25">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="15" height="15" tilewidth="48" tileheight="48" infinite="0" nextlayerid="6" nextobjectid="27">
  <editorsettings>
   <export target="../../public/assets/scene_2_combat.json" format="json"/>
  </editorsettings>
@@ -278,10 +278,10 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,1,0,0,0,0,0,0,0,0,14,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,158,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
@@ -318,14 +318,29 @@
     <property name="name" value="Skeleton"/>
    </properties>
   </object>
-  <object id="23" x="51.7778" y="621.111" width="45.3333" height="46.6667">
+  <object id="23" x="142.889" y="624.444" width="45.3333" height="46.6667">
    <properties>
     <property name="kind" value="player"/>
    </properties>
   </object>
   <object id="24" x="47.7778" y="52" width="46.6667" height="42.6667">
    <properties>
+    <property name="dir" value="up"/>
     <property name="kind" value="stairs"/>
+   </properties>
+  </object>
+  <object id="25" x="52.2222" y="624.222" width="46.6667" height="42.6667">
+   <properties>
+    <property name="dir" value="down"/>
+    <property name="kind" value="stairs"/>
+   </properties>
+  </object>
+  <object id="26" x="576.667" y="480" width="46.6667" height="44.4444">
+   <properties>
+    <property name="basic_atk" type="int" value="2"/>
+    <property name="basic_hp" type="int" value="10"/>
+    <property name="kind" value="monster"/>
+    <property name="name" value="Bat"/>
    </properties>
   </object>
  </objectgroup>

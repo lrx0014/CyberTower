@@ -1,5 +1,5 @@
-import type { Vec2 } from '../event/bus/eventBus';
-import { BaseTowerScene, TowerSceneConfig } from './BaseTowerScene';
+import type { StairsEncounterInfo } from '../event/events';
+import { BaseTowerScene, TowerSceneConfig, TowerSceneSnapshot } from './BaseTowerScene';
 
 export type { DirectionInput } from './BaseTowerScene';
 
@@ -24,11 +24,22 @@ const TUTORIAL_SCENE_CONFIG: TowerSceneConfig = {
 };
 
 export default class TutorialScene extends BaseTowerScene {
+  private static snapshot: TowerSceneSnapshot | null = null;
+
   constructor() {
     super(TUTORIAL_SCENE_CONFIG);
   }
 
-  protected override handleStairsEncounter(_position: Vec2, _defaultAction: () => void): void {
-    this.scene.start('CombatScene', { floor: 1 });
+  init(): void {
+    this.setPendingSceneSnapshot(TutorialScene.snapshot);
+  }
+
+  protected override handleStairsEncounter(info: StairsEncounterInfo, defaultAction: () => void): void {
+    if (info.direction === 'down') {
+      defaultAction();
+      return;
+    }
+    TutorialScene.snapshot = this.captureSceneState();
+    this.scene.start('CombatScene', { floor: 1, reset: true });
   }
 }
