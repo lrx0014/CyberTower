@@ -14,7 +14,8 @@ export const createStairsEncounterHandler = (
   return async (event) => {
     const position = event.payload.position;
     const defaultAction = () => {
-      ctx.postMsg('Level 1 complete!');
+      const sceneName = ctx.getSceneDisplayName();
+      ctx.postMsg(`${sceneName} complete!`);
       const from = helpers.fallbackFrom();
       helpers.enqueueMoveCommit(from, position, true);
     };

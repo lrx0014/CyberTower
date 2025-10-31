@@ -17,6 +17,7 @@ import { PlayerState } from './global/types';
 import { initialiseJournalUI } from './journal/travelerJournal';
 
 const msgEl = document.getElementById('msg');
+const levelNameEl = document.getElementById('level-name');
 const nameEl = document.getElementById('name');
 const hpEl = document.getElementById('hp');
 const atkEl = document.getElementById('atk');
@@ -52,6 +53,7 @@ if (
   !(hpEl instanceof HTMLElement) ||
   !(atkEl instanceof HTMLElement) ||
   !(defEl instanceof HTMLElement) ||
+  !(levelNameEl instanceof HTMLElement) ||
   !(inventoryList instanceof HTMLElement) ||
   !(journalOpenButton instanceof HTMLButtonElement) ||
   !(journalModal instanceof HTMLElement) ||
@@ -91,6 +93,10 @@ initialiseJournalUI({
 
 const postMessage = (text: string) => {
   msgEl.textContent = text;
+};
+
+const updateLevelName = (text: string) => {
+  levelNameEl.textContent = text;
 };
 
 const updateStats = (state: PlayerState) => {
@@ -138,7 +144,8 @@ const renderInventory = (state: PlayerState) => {
 
 registerUIHooks({
   postMessage,
-  updateStats
+  updateStats,
+  updateLevelName
 });
 
 const config: Phaser.Types.Core.GameConfig = {

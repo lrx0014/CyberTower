@@ -48,4 +48,5 @@ export interface PlayerState {
 export interface UIHooks {
   postMessage: (text: string) => void;
   updateStats: (state: PlayerState) => void;
+  updateLevelName: (levelName: string) => void;
 }

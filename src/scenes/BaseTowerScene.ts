@@ -128,6 +128,10 @@ function facingFromDelta(dx: number, dy: number): Facing | null {
 
 export function registerUIHooks(hooks: UIHooks) {
   uiHooks = hooks;
+  const scene = getActiveScene();
+  if (scene) {
+    hooks.updateLevelName(scene.getDisplayName());
+  }
   if (state) {
     hooks.updateStats(state);
   }
@@ -315,14 +319,17 @@ export interface TowerSceneConfig {
   key: string;
   mapKey: string;
   mapPath: string;
+  displayName: string;
 }
 
 export class BaseTowerScene extends Phaser.Scene {
   protected readonly towerConfig: TowerSceneConfig;
+  protected readonly sceneDisplayName: string;
 
   constructor(config: TowerSceneConfig) {
     super({ key: config.key });
     this.towerConfig = config;
+    this.sceneDisplayName = config.displayName;
   }
 
   preload() {
@@ -440,7 +447,8 @@ export class BaseTowerScene extends Phaser.Scene {
     resetPlayerAnimationState();
     selectPlayerFrame(false);
     updateUI();
-    postMsg('Level loaded.');
+    uiHooks?.updateLevelName(this.sceneDisplayName);
+    postMsg(`Entered ${this.sceneDisplayName}.`);
 
     if (this.objectsEntityLayer?.hasTileAt(spawn.x, spawn.y)) {
       this.objectsEntityLayer.removeTileAt(spawn.x, spawn.y);
@@ -848,8 +856,13 @@ export class BaseTowerScene extends Phaser.Scene {
       removeObjectTile: (position) => this.removeObjectTile(position),
       getItemData: (tileKey) => itemData.get(tileKey),
       getDoorData: (tileKey) => doorData.get(tileKey),
-      getMonsterData: (tileKey) => monsterData.get(tileKey)
+      getMonsterData: (tileKey) => monsterData.get(tileKey),
+      getSceneDisplayName: () => this.sceneDisplayName
     };
+  }
+
+  public getDisplayName(): string {
+    return this.sceneDisplayName;
   }
 
   protected handleStairsEncounter(_position: Vec2, defaultAction: () => void) {

@@ -19,7 +19,8 @@ export {
 const TUTORIAL_SCENE_CONFIG: TowerSceneConfig = {
   key: 'TutorialScene',
   mapKey: 'scene_1_tutorial',
-  mapPath: 'assets/scene_1_tutorial.json'
+  mapPath: 'assets/scene_1_tutorial.json',
+  displayName: 'Lobby'
 };
 
 export default class TutorialScene extends BaseTowerScene {

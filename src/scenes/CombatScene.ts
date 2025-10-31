@@ -3,7 +3,8 @@ import { BaseTowerScene, TowerSceneConfig } from './BaseTowerScene';
 const COMBAT_SCENE_CONFIG: TowerSceneConfig = {
   key: 'CombatScene',
   mapKey: 'scene_2_combat',
-  mapPath: 'assets/scene_2_combat.json'
+  mapPath: 'assets/scene_2_combat.json',
+  displayName: 'Floor 1'
 };
 
 export default class CombatScene extends BaseTowerScene {
