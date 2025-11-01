@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phish Net Defender</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at top, #111b2f, #06080e 70%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f5f8ff;
+      }
+
+      .hud {
+        position: absolute;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 24px;
+        font-size: 0.95rem;
+        color: #a8b6d9;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .container {
+        width: min(760px, 95vw);
+        height: min(600px, 85vh);
+        background: linear-gradient(180deg, rgba(30, 45, 68, 0.95), rgba(10, 13, 20, 0.95));
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 32px 60px rgba(0, 0, 0, 0.55);
+        position: relative;
+        overflow: hidden;
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .controls {
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+      }
+
+      .controls button {
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        color: #091422;
+        background: linear-gradient(135deg, #67d5ff, #458bff);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .controls button:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .controls button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(6, 9, 15, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        flex-direction: column;
+        gap: 16px;
+        font-size: 1rem;
+        color: #dfe7ff;
+        white-space: pre-line;
+      }
+
+      .overlay.hidden {
+        display: none;
+      }
+
+      .overlay button {
+        margin-top: 16px;
+        padding: 12px 20px;
+        border-radius: 999px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        color: #091422;
+        background: linear-gradient(135deg, #8df5c3, #54e8ff);
+      }
+
+      .result-summary {
+        white-space: pre-line;
+        font-size: 0.95rem;
+        color: #b8c5e8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hud" id="hud">
+      <div>Wave <span id="wave">1</span>/3</div>
+      <div>Inbox Integrity <span id="integrity">100%</span></div>
+      <div>Phish Caught <span id="caught">0</span></div>
+      <div>False Flags <span id="false-flags">0</span></div>
+    </div>
+
+    <div class="container">
+      <canvas id="game" width="760" height="600"></canvas>
+      <div class="controls">
+        <button id="btn-surrender">Surrender</button>
+      </div>
+      <div class="overlay" id="overlay">
+        <h2>Phish Net Defender</h2>
+        <p id="overlay-text">Identify phishing emails and let legitimate messages through. Use A/D or ←/→ to move. Press W or space to cast your net.</p>
+        <button id="btn-start">Start Mission</button>
+      </div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const overlay = document.getElementById('overlay');
+      const overlayText = document.getElementById('overlay-text');
+      const overlayTitle = overlay.querySelector('h2');
+      const startBtn = document.getElementById('btn-start');
+      const surrenderBtn = document.getElementById('btn-surrender');
+      const waveText = document.getElementById('wave');
+      const integrityText = document.getElementById('integrity');
+      const caughtText = document.getElementById('caught');
+      const falseFlagsText = document.getElementById('false-flags');
+
+      const WIDTH = canvas.width;
+      const HEIGHT = canvas.height;
+      const NET_WIDTH = 80;
+      const NET_HEIGHT = 20;
+
+      let running = false;
+      let battleContext = null;
+      let pendingResult = null;
+
+      let player = {
+        x: WIDTH / 2 - NET_WIDTH / 2,
+        y: HEIGHT - 80,
+        width: NET_WIDTH,
+        height: NET_HEIGHT,
+        speed: 6
+      };
+
+      const keys = new Set();
+
+      const phishTraits = [
+        'Mismatched domain',
+        'Urgent tone',
+        'Unexpected attachment',
+        'Generic greeting',
+        'Suspicious link',
+        'Typos and errors'
+      ];
+
+      const legitimacyTraits = [
+        'Known contact',
+        'Expected invoice',
+        'Internal memo',
+        'Security alert from trusted service',
+        'Support ticket update'
+      ];
+
+      function makeEnvelope(type) {
+        const isPhish = type === 'phish';
+        const speed = Math.random() * 1.5 + 1.2;
+        const trait = isPhish
+          ? phishTraits[Math.floor(Math.random() * phishTraits.length)]
+          : legitimacyTraits[Math.floor(Math.random() * legitimacyTraits.length)];
+        return {
+          type,
+          x: Math.random() * (WIDTH - 80) + 40,
+          y: -40,
+          speed,
+          width: 50,
+          height: 36,
+          trait,
+          marked: false
+        };
+      }
+
+      let envelopes = [];
+      let shots = [];
+      let wave = 1;
+      const maxWaves = 3;
+      let spawnTimer = 0;
+      let spawnInterval = 90;
+      let integrity = 100;
+      let phishCaught = 0;
+      let falseFlags = 0;
+      let totalPhish = 0;
+      let totalLegit = 0;
+      let spawnedThisWave = 0;
+      const waveTargets = [12, 14, 16];
+
+      function resetGame() {
+        envelopes = [];
+        shots = [];
+        wave = 1;
+        spawnTimer = 0;
+        spawnInterval = 90;
+        integrity = 100;
+        spawnedThisWave = 0;
+        phishCaught = 0;
+        falseFlags = 0;
+        totalPhish = 0;
+        totalLegit = 0;
+        player.x = WIDTH / 2 - NET_WIDTH / 2;
+        updateHud();
+      }
+
+      function updateHud() {
+        waveText.textContent = wave;
+        integrityText.textContent = `${Math.max(0, Math.round(integrity))}%`;
+        caughtText.textContent = phishCaught;
+        falseFlagsText.textContent = falseFlags;
+      }
+
+      function spawnEnvelope() {
+        if (wave > maxWaves) return;
+        const phishChance = Math.min(0.45 + wave * 0.1, 0.75);
+        const type = Math.random() < phishChance ? 'phish' : 'legit';
+        if (type === 'phish') totalPhish += 1;
+        else totalLegit += 1;
+        envelopes.push(makeEnvelope(type));
+        spawnedThisWave += 1;
+      }
+
+      function fireShot() {
+        shots.push({
+          x: player.x + player.width / 2 - 4,
+          y: player.y,
+          width: 8,
+          height: 18,
+          speed: 7
+        });
+      }
+
+      function handleInput() {
+        if (keys.has('ArrowLeft') || keys.has('KeyA')) {
+          player.x -= player.speed;
+        }
+        if (keys.has('ArrowRight') || keys.has('KeyD')) {
+          player.x += player.speed;
+        }
+        player.x = Math.max(40, Math.min(WIDTH - NET_WIDTH - 40, player.x));
+      }
+
+      function updateEntities() {
+        envelopes.forEach((env) => {
+          env.y += env.speed;
+        });
+        envelopes = envelopes.filter((env) => {
+          if (env.y > HEIGHT + 50) {
+            if (env.type === 'phish') {
+              integrity -= 12;
+            }
+            return false;
+          }
+          return true;
+        });
+
+        shots.forEach((shot) => {
+          shot.y -= shot.speed;
+        });
+        shots = shots.filter((shot) => shot.y + shot.height > 0);
+
+        shots.forEach((shot) => {
+          envelopes.forEach((env) => {
+            if (checkCollision(shot, env) && !env.marked) {
+              env.marked = true;
+              shot.y = -999;
+              if (env.type === 'phish') {
+                phishCaught += 1;
+              } else {
+                falseFlags += 1;
+                integrity -= 6;
+              }
+            }
+          });
+        });
+
+        envelopes = envelopes.filter((env) => {
+          if (env.marked) {
+            // animate pop if desired
+            return false;
+          }
+          return true;
+        });
+        checkWaveProgress();
+      }
+
+      function checkWaveProgress() {
+        if (wave > maxWaves) return;
+        const target = waveTargets[Math.min(wave - 1, waveTargets.length - 1)];
+        if (spawnedThisWave >= target && envelopes.length === 0) {
+          wave += 1;
+          spawnedThisWave = 0;
+          spawnInterval = Math.max(55, spawnInterval - 8);
+          spawnTimer = 0;
+          updateHud();
+        }
+      }
+
+      function checkCollision(a, b) {
+        return !(
+          a.x + a.width < b.x ||
+          a.x > b.x + b.width ||
+          a.y + a.height < b.y ||
+          a.y > b.y + b.height
+        );
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        for (let i = 0; i < 12; i += 1) {
+          ctx.fillRect((i / 12) * WIDTH, 0, 1, HEIGHT);
+        }
+
+        ctx.fillStyle = '#4cc3ff';
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+
+        ctx.fillStyle = '#ff88b0';
+        shots.forEach((shot) => {
+          ctx.fillRect(shot.x, shot.y, shot.width, shot.height);
+        });
+
+        envelopes.forEach((env) => {
+          ctx.fillStyle = env.type === 'phish' ? '#ff6b6b' : '#70f2ff';
+          ctx.beginPath();
+          ctx.rect(env.x - env.width / 2, env.y - env.height / 2, env.width, env.height);
+          ctx.fill();
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+          ctx.fillRect(env.x - env.width / 2, env.y - env.height / 2, env.width, env.height / 2);
+
+          ctx.fillStyle = '#111826';
+          ctx.font = '12px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(env.trait, env.x, env.y + env.height);
+        });
+      }
+
+      function gameLoop() {
+        if (!running) return;
+        handleInput();
+        updateEntities();
+        draw();
+        spawnTimer += 1;
+        if (spawnTimer >= spawnInterval) {
+          spawnTimer = 0;
+          spawnEnvelope();
+        }
+        updateHud();
+
+        if (integrity <= 0) {
+          integrity = 0;
+          endMission('defeat');
+          return;
+        }
+
+        if (wave > maxWaves && envelopes.length === 0) {
+          endMission('victory');
+          return;
+        }
+
+        requestAnimationFrame(gameLoop);
+      }
+
+      function endMission(reason) {
+        running = false;
+        const totalAttempts = totalPhish + totalLegit || 1;
+        const successRate = totalPhish > 0 ? phishCaught / totalPhish : 1;
+        const falseRate = totalLegit > 0 ? falseFlags / totalLegit : 0;
+        const monsterHp = Math.max(1, battleContext?.monster?.stats?.hp || 10);
+        const playerAtk = Math.max(6, battleContext?.player?.stats?.atk || 6);
+        const monsterAtk = Math.max(1, battleContext?.monster?.stats?.atk || 5);
+
+        const monsterDamage = Math.min(monsterHp, Math.round(successRate * playerAtk));
+        const playerDamage = Math.round((1 - successRate + falseRate) * monsterAtk);
+
+        const summaryLines = [
+          `Phish caught: ${phishCaught}/${totalPhish}`,
+          `False flags: ${falseFlags}`,
+          `Inbox integrity: ${Math.round(integrity)}%`,
+          `Damage dealt: ${monsterDamage}`,
+          `Damage taken: ${playerDamage}`
+        ];
+
+        pendingResult = {
+          outcome: reason === 'victory' ? 'victory' : 'defeat',
+          message:
+            reason === 'victory'
+              ? `You purged ${battleContext.monster.name}'s phishing wave!`
+              : `${battleContext.monster.name} overwhelmed the inbox.`,
+          player: { deltaHp: -playerDamage },
+          monster: { defeated: monsterDamage >= monsterHp, deltaHp: -monsterDamage },
+          rewards: {
+            messages: summaryLines
+          }
+        };
+
+        overlay.classList.remove('hidden');
+        if (overlayTitle) {
+          overlayTitle.textContent = reason === 'victory' ? 'Mission Success' : 'Mission Failed';
+        }
+        overlayText.textContent = summaryLines.join('\n');
+        startBtn.textContent = 'Return to Tower';
+      }
+
+      function sendPendingResult() {
+        if (!pendingResult) {
+          window.parent.postMessage(
+            {
+              type: 'battle:result',
+              payload: {
+                outcome: 'abort',
+                message: 'You withdrew from the phishing defense.',
+                player: { deltaHp: -5 },
+                monster: { defeated: false }
+              }
+            },
+            '*'
+          );
+          return;
+        }
+        window.parent.postMessage({ type: 'battle:result', payload: pendingResult }, '*');
+        pendingResult = null;
+      }
+
+      function startMission() {
+        if (!battleContext) return;
+        pendingResult = null;
+        running = true;
+        overlay.classList.add('hidden');
+        resetGame();
+        spawnEnvelope();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function surrenderMission() {
+        if (!running) {
+          sendPendingResult();
+          return;
+        }
+        running = false;
+        pendingResult = {
+          outcome: 'abort',
+          message: `${battleContext.player.name} abandoned the phish defense.`,
+          player: { deltaHp: -Math.max(6, Math.round((totalPhish + 1) * 0.6)) },
+          monster: { defeated: false },
+          rewards: {
+            messages: ['Retreat allowed phishing emails through.']
+          }
+        };
+        overlay.classList.remove('hidden');
+        if (overlayTitle) {
+          overlayTitle.textContent = 'Mission Aborted';
+        }
+        overlayText.textContent = 'Mission aborted. Return when you are ready.';
+        startBtn.textContent = 'Return to Tower';
+      }
+
+      startBtn.addEventListener('click', () => {
+        if (pendingResult) {
+          sendPendingResult();
+          return;
+        }
+        startMission();
+      });
+
+      surrenderBtn.addEventListener('click', surrenderMission);
+
+      window.addEventListener('keydown', (event) => {
+        if (event.repeat) return;
+        if (event.code === 'Space' || event.code === 'KeyW' || event.code === 'ArrowUp') {
+          if (!running) return;
+          event.preventDefault();
+          fireShot();
+        } else {
+          keys.add(event.code);
+        }
+      });
+      window.addEventListener('keyup', (event) => {
+        keys.delete(event.code);
+      });
+
+      window.addEventListener('blur', () => {
+        keys.clear();
+      });
+
+      window.addEventListener('message', (event) => {
+        const { data } = event;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'battle:init') {
+          battleContext = data.payload;
+          pendingResult = null;
+          running = false;
+          resetGame();
+          overlay.classList.remove('hidden');
+          if (overlayTitle) {
+            overlayTitle.textContent = 'Phish Net Defender';
+          }
+          overlayText.textContent = `Monster ${battleContext.monster.name} is launching a phishing campaign.
+Catch malicious emails, let legitimate mail through.
+Move with ←/→ or A/D. Shoot with space or W.`;
+          startBtn.textContent = 'Launch Defense';
+          surrenderBtn.disabled = false;
+          window.parent.postMessage({ type: 'battle:ready' }, '*');
+        }
+      });
+    </script>
+  </body>
+</html>

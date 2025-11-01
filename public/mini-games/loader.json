@@ -4,6 +4,10 @@
     "manifest": "mfa-mastermind/manifest.json"
   },
   {
+    "id": "phish-net",
+    "manifest": "phish-net/manifest.json"
+  },
+  {
     "id": "privacy-cleanup",
     "manifest": "privacy-cleanup/manifest.json"
   },

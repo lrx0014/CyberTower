@@ -1,0 +1,8 @@
+{
+  "id": "phish-net",
+  "name": "Phish Net Defender",
+  "description": "Catch phishing emails before they breach your inbox.",
+  "entry": "index.html",
+  "timeoutMs": 600000,
+  "allow": "fullscreen"
+}
