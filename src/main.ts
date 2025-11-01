@@ -108,7 +108,7 @@ registerMiniGames([
   {
     id: 'sample-skill-challenge',
     name: 'Sample Skill Challenge',
-    url: '/mini-games/sample/index.html',
+    url: '/mini-games/quiz/index.html',
     timeoutMs: 600000
   }
 ]);
