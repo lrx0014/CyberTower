@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Audit Blitz</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at top, #151b2f, #070911 60%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f1f4ff;
+      }
+
+      .card {
+        width: min(680px, 95vw);
+        background: rgba(10, 14, 26, 0.94);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 32px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .stats {
+        font-size: 0.95rem;
+        color: #a9b5d4;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .timer {
+        font-size: 1.4rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-align: center;
+        color: #ffc27a;
+      }
+
+      .scenario {
+        background: rgba(23, 32, 54, 0.85);
+        border-radius: 14px;
+        padding: 18px 22px;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .scenario h2 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+
+      .scenario p {
+        margin: 0;
+        font-size: 0.98rem;
+        line-height: 1.6;
+        color: #d6dcf8;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        padding: 4px 10px;
+        background: rgba(86, 118, 255, 0.18);
+        border-radius: 999px;
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        color: #9fb3ff;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        flex: 1 1 180px;
+        padding: 14px 16px;
+        border-radius: 999px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.keep {
+        background: linear-gradient(135deg, #58d1ff, #3e8dff);
+        color: #091523;
+      }
+
+      button.restrict {
+        background: linear-gradient(135deg, #ff8b8b, #f857a6);
+        color: #17060b;
+      }
+
+      button.retreat {
+        background: rgba(255, 255, 255, 0.08);
+        color: #d0d7f3;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .feedback {
+        min-height: 56px;
+        background: rgba(24, 33, 53, 0.65);
+        border-radius: 12px;
+        padding: 16px 18px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #dfe3ff;
+        white-space: pre-line;
+      }
+
+      .feedback.success {
+        color: #86f5a8;
+      }
+
+      .feedback.error {
+        color: #ff9b9b;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Privacy Audit Blitz</h1>
+      <div class="stats" id="stats">Loading battle context...</div>
+      <div class="timer" id="timer">--</div>
+
+      <div class="scenario hidden" id="scenario">
+        <h2 id="scenario-title"></h2>
+        <p id="scenario-text"></p>
+        <div class="tags" id="scenario-tags"></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="keep" id="btn-allow">Keep as Shared</button>
+        <button type="button" class="restrict" id="btn-restrict">Restrict Exposure</button>
+        <button type="button" class="retreat" id="btn-retreat">Retreat</button>
+      </div>
+
+      <div class="feedback" id="feedback">Audit the feed and clamp down risky items before time runs out.</div>
+    </div>
+
+    <script>
+      const statsEl = document.getElementById('stats');
+      const timerEl = document.getElementById('timer');
+      const scenarioEl = document.getElementById('scenario');
+      const scenarioTitleEl = document.getElementById('scenario-title');
+      const scenarioTextEl = document.getElementById('scenario-text');
+      const scenarioTagsEl = document.getElementById('scenario-tags');
+      const feedbackEl = document.getElementById('feedback');
+      const allowBtn = document.getElementById('btn-allow');
+      const restrictBtn = document.getElementById('btn-restrict');
+      const retreatBtn = document.getElementById('btn-retreat');
+
+      let battleContext = null;
+      let deck = [];
+      let currentIndex = 0;
+      let scoreSeverity = 0;
+      let mistakeSeverity = 0;
+      let totalSeverity = 0;
+      let timerId = null;
+      let timeRemaining = 0;
+      let lockInput = false;
+      let pendingResult = null;
+      let answeredCards = 0;
+
+      const TOTAL_CARDS = 6;
+      const BASE_TIME = 45;
+
+      const SCENARIOS = [
+        {
+          title: 'Vacation Photo Album',
+          text: 'A public post shows your entire family, tagged with real names and geotagged at your home address.',
+          recommended: 'restrict',
+          severity: 3,
+          tags: ['Social Media', 'Geotag', 'Family'],
+          explanation: 'Oversharing location and identities can be used for stalking or social engineering; limit visibility.'
+        },
+        {
+          title: 'Fitness Tracker Feed',
+          text: 'Daily jogging routes shared publicly, including exact time you leave home.',
+          recommended: 'restrict',
+          severity: 3,
+          tags: ['Location', 'Routine'],
+          explanation: 'Reveals predictable patterns—valuable to attackers planning physical intrusion.'
+        },
+        {
+          title: 'Professional Achievement',
+          text: 'You shared that you earned a new security certification on LinkedIn.',
+          recommended: 'allow',
+          severity: 1,
+          tags: ['Career'],
+          explanation: 'Professional updates are fine to keep public, low privacy risk.'
+        },
+        {
+          title: 'Browser Extension Permissions',
+          text: 'A free coupon extension requests access to read and change all data on every website.',
+          recommended: 'restrict',
+          severity: 3,
+          tags: ['Permissions', 'Browser'],
+          explanation: 'Excessive permissions could capture credentials; uninstall or restrict.'
+        },
+        {
+          title: 'Contact Sync Request',
+          text: 'A quiz app asks to sync your contact list for “friend recommendations.”',
+          recommended: 'restrict',
+          severity: 2,
+          tags: ['Contacts', 'Mobile'],
+          explanation: 'Sharing contacts leaks other people’s information without their consent.'
+        },
+        {
+          title: 'Calendar Share Link',
+          text: 'Your work calendar is set to public to make scheduling easier.',
+          recommended: 'restrict',
+          severity: 2,
+          tags: ['Work', 'Calendar'],
+          explanation: 'Meeting details and travel plans should only be visible to collaborators.'
+        },
+        {
+          title: 'Nightlife Selfie',
+          text: 'You posted a nightclub selfie with metadata revealing your precise location.',
+          recommended: 'restrict',
+          severity: 2,
+          tags: ['Social Media', 'Location'],
+          explanation: 'Live location data can broadcast when you’re away from home—restrict visibility.'
+        },
+        {
+          title: 'Encrypted Messaging App',
+          text: 'You use an end-to-end encrypted messenger to chat with friends.',
+          recommended: 'allow',
+          severity: 1,
+          tags: ['Communications'],
+          explanation: 'Encrypted messaging improves privacy; no change necessary.'
+        },
+        {
+          title: 'Smart Speaker History',
+          text: 'Voice assistant logs every command and keeps recordings in the cloud indefinitely.',
+          recommended: 'restrict',
+          severity: 2,
+          tags: ['IoT', 'Audio'],
+          explanation: 'Review retention policies or delete recordings to reduce exposure.'
+        },
+        {
+          title: 'Birthday Reminder',
+          text: 'Your profile publicly lists your full birthdate for friends to see.',
+          recommended: 'restrict',
+          severity: 2,
+          tags: ['Identity'],
+          explanation: 'Birthdates are common in identity verification; keep them private.'
+        }
+      ];
+
+      function pickDeck() {
+        const shuffled = [...SCENARIOS].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, TOTAL_CARDS);
+      }
+
+      function resetUI() {
+        allowBtn.disabled = false;
+        restrictBtn.disabled = false;
+        retreatBtn.disabled = false;
+        retreatBtn.textContent = 'Surrender';
+        delete retreatBtn.dataset.return;
+        feedbackEl.classList.remove('success', 'error');
+        feedbackEl.textContent = 'Audit the feed and clamp down risky items before time runs out.';
+        scenarioEl.classList.add('hidden');
+      }
+
+      function startTimer(seconds) {
+        clearInterval(timerId);
+        timeRemaining = seconds;
+        timerEl.textContent = `${timeRemaining.toString().padStart(2, '0')}s`;
+        timerId = setInterval(() => {
+          timeRemaining -= 1;
+          if (timeRemaining <= 0) {
+            timerEl.textContent = '00s';
+            clearInterval(timerId);
+            finishRound('timeout');
+          } else {
+            timerEl.textContent = `${timeRemaining.toString().padStart(2, '0')}s`;
+          }
+        }, 1000);
+      }
+
+      function renderScenario() {
+        if (!deck[currentIndex]) {
+          return;
+        }
+        const card = deck[currentIndex];
+        scenarioTitleEl.textContent = card.title;
+        scenarioTextEl.textContent = card.text;
+        scenarioTagsEl.innerHTML = '';
+        (card.tags || []).forEach((tag) => {
+          const span = document.createElement('span');
+          span.className = 'tag';
+          span.textContent = tag;
+          scenarioTagsEl.appendChild(span);
+        });
+        scenarioEl.classList.remove('hidden');
+        feedbackEl.classList.remove('success', 'error');
+        feedbackEl.textContent = 'Should this stay public or be locked down?';
+        allowBtn.disabled = lockInput;
+        restrictBtn.disabled = lockInput;
+      }
+
+      function handleChoice(choice) {
+        if (lockInput || !deck[currentIndex]) return;
+        lockInput = true;
+        allowBtn.disabled = true;
+        restrictBtn.disabled = true;
+
+        const card = deck[currentIndex];
+        const correct = card.recommended === choice;
+        const severity = card.severity || 1;
+
+        if (correct) {
+          scoreSeverity += severity;
+          feedbackEl.classList.remove('error');
+          feedbackEl.classList.add('success');
+          feedbackEl.textContent = `Correct! ${card.explanation}`;
+        } else {
+          mistakeSeverity += severity;
+          feedbackEl.classList.remove('success');
+          feedbackEl.classList.add('error');
+          feedbackEl.textContent = `Not ideal. ${card.explanation}`;
+        }
+
+        setTimeout(() => {
+          answeredCards += 1;
+          currentIndex += 1;
+          lockInput = false;
+          if (currentIndex >= deck.length) {
+            finishRound('complete');
+          } else {
+            renderScenario();
+          }
+        }, 1200);
+      }
+
+      function finishRound(reason) {
+        clearInterval(timerId);
+        lockInput = true;
+        allowBtn.disabled = true;
+        restrictBtn.disabled = true;
+        retreatBtn.disabled = false;
+        scenarioEl.classList.add('hidden');
+
+        const answeredSeverity = scoreSeverity + mistakeSeverity;
+        const unansweredSeverity = Math.max(0, totalSeverity - answeredSeverity);
+        const totalConsidered = totalSeverity || 1;
+        const monsterAtk = Math.max(1, battleContext?.monster?.stats?.atk || 5);
+        const monsterHp = Math.max(1, battleContext?.monster?.stats?.hp || 10);
+        const playerAtk = Math.max(6, battleContext?.player?.stats?.atk || 6);
+
+        const protectedSeverity = scoreSeverity;
+        const exposedSeverity = mistakeSeverity + unansweredSeverity;
+        const answeredCount = Math.min(deck.length, answeredCards);
+        const missedCount = Math.max(0, deck.length - answeredCount);
+
+        const monsterDamage = Math.min(
+          monsterHp,
+          Math.round((protectedSeverity / totalConsidered) * playerAtk)
+        );
+        const playerDamage = Math.round((exposedSeverity / totalConsidered) * Math.max(3, monsterAtk));
+
+        let outcome = 'defeat';
+        if (protectedSeverity >= exposedSeverity && monsterDamage > 0) {
+          outcome = 'victory';
+        }
+        if (reason === 'timeout' && protectedSeverity === 0) {
+          outcome = 'defeat';
+        }
+
+        const summaryLines = [
+          `Items audited: ${answeredCount}/${deck.length}`,
+          `Missed reviews: ${missedCount}`,
+          `Protected severity: ${protectedSeverity}/${totalSeverity}`,
+          `Exposure severity: ${exposedSeverity}/${totalSeverity}`,
+          `Damage dealt: ${monsterDamage}`,
+          `Damage taken: ${playerDamage}`
+        ];
+
+        const result = {
+          outcome,
+          message:
+            outcome === 'victory'
+              ? `You shut down ${battleContext.monster.name}'s data harvest!`
+              : `Your footprint fed ${battleContext.monster.name}.`,
+          player: { deltaHp: -playerDamage },
+          monster: { defeated: monsterDamage >= monsterHp, deltaHp: -monsterDamage },
+          rewards: {
+            messages: summaryLines
+          }
+        };
+
+        showReturnState(result, summaryLines);
+      }
+
+      function showReturnState(result, summaryLines) {
+        feedbackEl.classList.remove('error', 'success');
+        feedbackEl.textContent = summaryLines.join('\n');
+        retreatBtn.textContent = 'Return to Tower';
+        retreatBtn.dataset.return = 'true';
+        retreatBtn.disabled = false;
+        pendingResult = result;
+      }
+
+      function sendPendingResult() {
+        if (!pendingResult) return;
+        window.parent.postMessage({ type: 'battle:result', payload: pendingResult }, '*');
+        pendingResult = null;
+      }
+
+      function retreatEarly() {
+        if (!battleContext) return;
+        clearInterval(timerId);
+        const monsterAtk = Math.max(1, battleContext.monster.stats.atk);
+        const playerDamage = Math.max(4, Math.round(monsterAtk * 0.75));
+        showReturnState(
+          {
+            outcome: 'abort',
+            message: `${battleContext.player.name} abandoned the privacy cleanup.`,
+            player: { deltaHp: -playerDamage },
+            monster: { defeated: false },
+            rewards: {
+              messages: ['Retreating left sensitive data exposed.']
+            }
+          },
+          [`Retreat chosen. You suffer ${playerDamage} damage.`]
+        );
+      }
+
+      allowBtn.addEventListener('click', () => handleChoice('allow'));
+      restrictBtn.addEventListener('click', () => handleChoice('restrict'));
+      retreatBtn.addEventListener('click', () => {
+        if (retreatBtn.dataset.return === 'true') {
+          sendPendingResult();
+        } else {
+          retreatEarly();
+        }
+      });
+
+      window.addEventListener('message', (event) => {
+        const { data } = event;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'battle:init') {
+          battleContext = data.payload;
+          deck = pickDeck();
+          totalSeverity = deck.reduce((sum, card) => sum + (card.severity || 1), 0);
+          scoreSeverity = 0;
+          mistakeSeverity = 0;
+          currentIndex = 0;
+          answeredCards = 0;
+          lockInput = false;
+          pendingResult = null;
+          resetUI();
+          statsEl.textContent = `Monster ATK: ${battleContext.monster.stats.atk} | Player ATK: ${battleContext.player.stats.atk}`;
+          renderScenario();
+          startTimer(BASE_TIME);
+          window.parent.postMessage({ type: 'battle:ready' }, '*');
+        }
+      });
+    </script>
+  </body>
+</html>

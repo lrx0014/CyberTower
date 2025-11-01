@@ -185,7 +185,7 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
         detailsEl.textContent = summary;
         startBtn.classList.add('hidden');
         quizArea.classList.add('hidden');
-        fleeBtn.textContent = 'Return to Tower';
+      fleeBtn.textContent = 'Return to Tower';
         fleeBtn.dataset.return = 'true';
         fleeBtn.disabled = false;
         pendingResult = result;
@@ -345,7 +345,7 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
           quizArea.classList.add('hidden');
           startBtn.disabled = false;
           startBtn.classList.remove('hidden');
-          fleeBtn.textContent = 'Surrender';
+      fleeBtn.textContent = 'Surrender';
           delete fleeBtn.dataset.return;
           pendingResult = null;
           updateDetails();

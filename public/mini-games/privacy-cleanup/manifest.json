@@ -1,0 +1,8 @@
+{
+  "id": "privacy-cleanup",
+  "name": "Privacy Audit Blitz",
+  "description": "Decide what to lock down before a data broker profiles you.",
+  "entry": "index.html",
+  "timeoutMs": 70000,
+  "allow": "fullscreen"
+}
