@@ -35,7 +35,7 @@ export const DEFAULT_MINI_GAME_ID = 'sample-skill-challenge';
 
 export function initialiseMiniGameHost(elements: MiniGameHostElements) {
   host = elements;
-  hideHost();
+  void hideHost();
 }
 
 export function registerMiniGames(descriptors: MiniGameDescriptor[]) {
@@ -48,33 +48,80 @@ export function getMiniGameDescriptor(id: string): MiniGameDescriptor | undefine
   return registry.get(id);
 }
 
-function showHost() {
+function animateOverlay(active: boolean, waitForTransition = true): Promise<void> {
+  if (!host) return Promise.resolve();
+  const overlay = host.overlay;
+  const isActive = overlay.classList.contains('active');
+  if (active === isActive) {
+    return Promise.resolve();
+  }
+
+  if (!waitForTransition) {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        if (active) {
+          overlay.classList.add('active');
+        } else {
+          overlay.classList.remove('active');
+        }
+        resolve();
+      });
+    });
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      overlay.removeEventListener('transitionend', onTransition);
+      window.clearTimeout(fallback);
+      resolve();
+    };
+    const onTransition = (event: TransitionEvent) => {
+      if (event.target !== overlay) return;
+      if (!(event.propertyName === 'transform' || event.propertyName === 'opacity')) return;
+      finish();
+    };
+    const fallback = window.setTimeout(finish, 420);
+    overlay.addEventListener('transitionend', onTransition);
+    requestAnimationFrame(() => {
+      if (active) {
+        overlay.classList.add('active');
+      } else {
+        overlay.classList.remove('active');
+      }
+    });
+  });
+}
+
+async function showHost(): Promise<void> {
   if (!host) return;
-  host.overlay.classList.add('active');
   if (host.loading) {
     host.loading.classList.remove('hidden');
   }
+  await animateOverlay(true, false);
 }
 
-function hideHost() {
+async function hideHost(): Promise<void> {
   if (!host) return;
-  host.overlay.classList.remove('active');
   if (host.loading) {
     host.loading.classList.add('hidden');
   }
+  await animateOverlay(false, true);
   if (host.frame) {
     host.frame.src = 'about:blank';
   }
 }
 
-function cleanupSession() {
+async function cleanupSession() {
   const previousSession = activeSession;
   if (previousSession?.timeoutHandle != null) {
     window.clearTimeout(previousSession.timeoutHandle);
   }
   activeSession = null;
-  hideHost();
   window.removeEventListener('message', handleMessage);
+  await hideHost();
   requestAnimationFrame(() => {
     if (!host) return;
     try {
@@ -114,8 +161,9 @@ function handleMessage(event: MessageEvent) {
   if (messageType === 'battle:result') {
     const session = activeSession;
     if (!session) return;
-    cleanupSession();
-    session.resolve((data as { payload: BattleResult }).payload);
+    void cleanupSession().then(() => {
+      session.resolve((data as { payload: BattleResult }).payload);
+    });
   }
 }
 
@@ -146,10 +194,11 @@ export async function launchMiniGame(
     throw new Error(`Mini-game descriptor not found for ${miniGameId}.`);
   }
 
+  await showHost();
+
   return new Promise<BattleResult>((resolve, reject) => {
     const fail = (err: Error) => {
-      cleanupSession();
-      reject(err);
+      void cleanupSession().finally(() => reject(err));
     };
 
     const timeoutMs = options.timeoutMs ?? descriptor.timeoutMs ?? 60000;
@@ -162,26 +211,33 @@ export async function launchMiniGame(
       contextId: context.id
     };
 
-    showHost();
+    if (!host.frame) {
+      fail(new Error('Mini-game frame element not found.'));
+      return;
+    }
 
-    if (host.frame) {
-      if (descriptor.allow) {
-        host.frame.setAttribute('allow', descriptor.allow);
+    const frame = host.frame;
+    if (descriptor.allow) {
+      frame.setAttribute('allow', descriptor.allow);
+    }
+
+    const onLoad = () => {
+      frame.removeEventListener('load', onLoad);
+      if (!activeSession) return;
+      try {
+        frame.contentWindow?.postMessage({ type: 'battle:init', payload: context }, '*');
+      } catch (err) {
+        fail(err instanceof Error ? err : new Error('Failed to initialise mini-game.'));
       }
-      host.frame.src = descriptor.url;
-      const onLoad = () => {
-        host.frame.removeEventListener('load', onLoad);
-        if (!activeSession) return;
-        try {
-          host.frame.contentWindow?.postMessage(
-            { type: 'battle:init', payload: context },
-            '*'
-          );
-        } catch (err) {
-          fail(err instanceof Error ? err : new Error('Failed to initialise mini-game.'));
-        }
-      };
-      host.frame.addEventListener('load', onLoad);
+    };
+
+    frame.addEventListener('load', onLoad);
+
+    try {
+      frame.src = descriptor.url;
+    } catch (err) {
+      frame.removeEventListener('load', onLoad);
+      fail(err instanceof Error ? err : new Error('Failed to load mini-game.'));
     }
 
     window.addEventListener('message', handleMessage);
@@ -191,6 +247,7 @@ export async function launchMiniGame(
 export function cancelActiveMiniGame(reason?: Error) {
   if (!activeSession) return;
   const session = activeSession;
-  cleanupSession();
-  session.reject(reason ?? new Error('Mini-game cancelled.'));
+  void cleanupSession().finally(() => {
+    session.reject(reason ?? new Error('Mini-game cancelled.'));
+  });
 }

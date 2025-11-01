@@ -1083,9 +1083,20 @@ export class BaseTowerScene extends Phaser.Scene {
     return undefined;
   }
 
+  protected playBattleIntroEffects(): Promise<void> {
+    return new Promise((resolve) => {
+      const camera = this.cameras.main;
+      camera.shake(220, 0.01);
+      this.time.delayedCall(520, () => {
+        resolve();
+      });
+    });
+  }
+
   protected async runBattle(context: BattleContext): Promise<BattleResult> {
     this.setControlsEnabled(false);
     try {
+      await this.playBattleIntroEffects();
       return await launchMiniGame(context.monster.miniGameId, context);
     } finally {
       if (!this.isTransitioning) {
