@@ -1,0 +1,8 @@
+{
+  "id": "unbreakable",
+  "name": "Unbreakable Password!!",
+  "description": "Craft a password that meets every constraint before the timer runs out.",
+  "entry": "index.html",
+  "timeoutMs": 90000,
+  "allow": "fullscreen"
+}

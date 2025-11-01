@@ -2,5 +2,9 @@
   {
     "id": "quiz",
     "manifest": "quiz/manifest.json"
+  },
+  {
+    "id": "unbreakable",
+    "manifest": "unbreakable/manifest.json"
   }
 ]

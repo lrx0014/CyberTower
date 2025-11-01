@@ -179,13 +179,25 @@ Player HP: ${player.stats.hp} | ATK: ${player.stats.atk} | DEF: ${player.stats.d
 Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.stats.def}`;
       }
 
-      function sendResult(result) {
-        window.parent.postMessage({ type: 'battle:result', payload: result }, '*');
-        statusEl.textContent = 'Result sent. Closing...';
-        startBtn.disabled = true;
-        fleeBtn.disabled = true;
+      function showOutcome(result, summaryLines) {
+        const summary = summaryLines.join('\n');
+        statusEl.textContent = result.outcome === 'victory' ? 'Victory!' : result.outcome === 'defeat' ? 'Defeat...' : 'Retreated';
+        detailsEl.textContent = summary;
+        startBtn.classList.add('hidden');
         quizArea.classList.add('hidden');
+        fleeBtn.textContent = 'Return to Tower';
+        fleeBtn.dataset.return = 'true';
+        fleeBtn.disabled = false;
+        pendingResult = result;
       }
+
+      function sendPendingResult() {
+        if (!pendingResult) return;
+        window.parent.postMessage({ type: 'battle:result', payload: pendingResult }, '*');
+        pendingResult = null;
+      }
+
+      let pendingResult = null;
 
       function showQuestion(index) {
         const question = questions[index];
@@ -262,7 +274,7 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
         ];
 
         if (defeated) {
-          sendResult({
+          showOutcome({
             outcome: 'victory',
             message:
               correctCount === questionCount
@@ -273,9 +285,9 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
             rewards: {
               messages: summaryLines
             }
-          });
+          }, summaryLines);
         } else {
-          sendResult({
+          showOutcome({
             outcome: 'defeat',
             message: `${battleContext.monster.name} exploited your mistakes!`,
             player: { deltaHp: -playerDamage },
@@ -283,7 +295,7 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
             rewards: {
               messages: summaryLines
             }
-          });
+          }, summaryLines);
         }
       }
 
@@ -300,7 +312,7 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
 
       function fleeBattle() {
         if (!battleContext) return;
-        sendResult({
+        showOutcome({
           outcome: 'abort',
           message: `${battleContext.player.name} retreated from ${battleContext.monster.name}.`,
           player: { deltaHp: -Math.min(10, Math.floor(battleContext.player.stats.hp * 0.1)) },
@@ -308,11 +320,17 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
           rewards: {
             messages: ['You fled the encounter, but took a parting hit.']
           }
-        });
+        }, ['You chose to bow out of the fight.']);
       }
 
       startBtn.addEventListener('click', startQuiz);
-      fleeBtn.addEventListener('click', fleeBattle);
+      fleeBtn.addEventListener('click', () => {
+        if (fleeBtn.dataset.return === 'true') {
+          sendPendingResult();
+        } else {
+          fleeBattle();
+        }
+      });
 
       window.addEventListener('message', (event) => {
         const { data } = event;
@@ -327,6 +345,9 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
           quizArea.classList.add('hidden');
           startBtn.disabled = false;
           startBtn.classList.remove('hidden');
+          fleeBtn.textContent = 'Surrender';
+          delete fleeBtn.dataset.return;
+          pendingResult = null;
           updateDetails();
           window.parent.postMessage({ type: 'battle:ready' }, '*');
         }

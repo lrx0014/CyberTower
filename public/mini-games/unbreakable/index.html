@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unbreakable Password!!</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at top, #141d2c, #070a11 65%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f1f4ff;
+      }
+
+      .card {
+        width: min(640px, 94vw);
+        background: rgba(10, 14, 24, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.9rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .requirements {
+        background: rgba(24, 33, 52, 0.8);
+        border-radius: 12px;
+        padding: 16px 18px;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        color: #d4dcff;
+      }
+
+      .timer {
+        font-size: 1.4rem;
+        font-weight: 600;
+        text-align: center;
+        color: #ff8888;
+        letter-spacing: 0.08em;
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 0.95rem;
+        color: #c5cbe6;
+      }
+
+      input[type='password'],
+      input[type='text'] {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(12, 18, 30, 0.9);
+        color: #f5f7ff;
+        font-size: 1rem;
+      }
+
+      input:focus {
+        outline: 2px solid #5cb3ff;
+        outline-offset: 2px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      button {
+        flex: 1 1 180px;
+        padding: 12px 16px;
+        border-radius: 999px;
+        border: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, #54d6ff, #3d7bff);
+        color: #081122;
+      }
+
+      button.secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #d8def3;
+      }
+
+      button:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .result {
+        min-height: 52px;
+        background: rgba(24, 32, 48, 0.7);
+        border-radius: 12px;
+        padding: 16px 18px;
+        font-size: 0.95rem;
+        color: #e2e6ff;
+        line-height: 1.6;
+        white-space: pre-line;
+      }
+
+      .danger {
+        color: #ff8c8c;
+      }
+
+      .success {
+        color: #7af59d;
+      }
+
+      .stats {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.9rem;
+        color: #9aa6c9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Unbreakable Password!!</h1>
+      <div class="requirements" id="requirements">Loading...</div>
+      <div class="timer" id="timer">--</div>
+
+      <label>
+        Enter your password proposal
+        <input id="password-input" type="text" autocomplete="off" spellcheck="false" />
+      </label>
+
+      <div class="actions">
+        <button type="button" class="primary" id="submit-btn">Submit Password</button>
+        <button type="button" class="secondary" id="flee-btn">Retreat</button>
+      </div>
+
+      <div class="stats" id="stats">Awaiting battle context...</div>
+      <div class="result" id="result">Prepare a password that meets all constraints before time runs out.</div>
+    </div>
+
+    <script>
+      const requirementsEl = document.getElementById('requirements');
+      const timerEl = document.getElementById('timer');
+      const passwordInput = document.getElementById('password-input');
+      const submitBtn = document.getElementById('submit-btn');
+      const fleeBtn = document.getElementById('flee-btn');
+      const resultEl = document.getElementById('result');
+      const statsEl = document.getElementById('stats');
+
+      let battleContext = null;
+      let countdownTimer = null;
+      let timeRemaining = 0;
+      let requirements = null;
+
+      const requirementTemplates = [
+        {
+          minLengthRange: [10, 14],
+          maxLengthRange: [18, 22],
+          requiredSets: ['uppercase', 'lowercase', 'digit', 'symbol'],
+          forbiddenChars: [' ', '\\', '/', '"', '\'', '`']
+        },
+        {
+          minLengthRange: [12, 16],
+          maxLengthRange: [20, 26],
+          requiredSets: ['lowercase', 'digit', 'symbol'],
+          forbiddenChars: [' ', '0', 'O']
+        },
+        {
+          minLengthRange: [8, 10],
+          maxLengthRange: [14, 18],
+          requiredSets: ['uppercase', 'digit'],
+          forbiddenChars: [' ', 'l', '1', 'I']
+        },
+        {
+          minLengthRange: [14, 18],
+          maxLengthRange: [22, 28],
+          requiredSets: ['lowercase', 'uppercase', 'symbol'],
+          forbiddenChars: [' '] 
+        }
+      ];
+
+      const charsetDefinitions = {
+        lowercase: 'abcdefghijklmnopqrstuvwxyz',
+        uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        digit: '0123456789',
+        symbol: '!@#$%^&*()-_=+[]{}|;:,.<>?~'
+      };
+
+      function pickRequirement() {
+        const template = requirementTemplates[Math.floor(Math.random() * requirementTemplates.length)];
+        const minLength = randomInRange(template.minLengthRange[0], template.minLengthRange[1]);
+        const maxLength = randomInRange(Math.max(minLength + 2, template.maxLengthRange[0]), template.maxLengthRange[1]);
+        const timeLimit = randomInRange(20, 35);
+        return {
+          minLength,
+          maxLength,
+          requiredSets: [...template.requiredSets],
+          forbiddenChars: [...template.forbiddenChars],
+          timeLimit
+        };
+      }
+
+      function randomInRange(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function describeRequirements(req) {
+        const parts = [`- Length between ${req.minLength} and ${req.maxLength} characters.`];
+        if (req.requiredSets.length > 0) {
+          parts.push(`- Must include: ${req.requiredSets.map((set) => set).join(', ')}.`);
+        }
+        if (req.forbiddenChars.length > 0) {
+          parts.push(`- Cannot contain: ${req.forbiddenChars.join(' ')}`);
+        }
+        parts.push(`- Submit within ${req.timeLimit} seconds.`);
+        return parts.join('\n');
+      }
+
+      function startTimer(seconds) {
+        clearInterval(countdownTimer);
+        timeRemaining = seconds;
+        timerEl.textContent = `${timeRemaining.toString().padStart(2, '0')}s`;
+        countdownTimer = setInterval(() => {
+          timeRemaining -= 1;
+          if (timeRemaining <= 0) {
+            timerEl.textContent = '00s';
+            clearInterval(countdownTimer);
+            handleFailure('Time ran out before you submitted a password.');
+          } else {
+            timerEl.textContent = `${timeRemaining.toString().padStart(2, '0')}s`;
+          }
+        }, 1000);
+      }
+
+      function evaluatePassword(password, req) {
+        const issues = [];
+        if (password.length < req.minLength || password.length > req.maxLength) {
+          issues.push(`Password length must be between ${req.minLength} and ${req.maxLength}.`);
+        }
+        req.forbiddenChars.forEach((char) => {
+          if (password.includes(char)) {
+            issues.push(`Password cannot contain '${char}'.`);
+          }
+        });
+
+        req.requiredSets.forEach((setName) => {
+          const charset = charsetDefinitions[setName];
+          if (!charset || !charset.split('').some((ch) => password.includes(ch))) {
+            issues.push(`Include at least one ${setName} character.`);
+          }
+        });
+
+        return {
+          valid: issues.length === 0,
+          issues
+        };
+      }
+
+      function estimateBruteForceTime(password) {
+        let charsetSize = 0;
+        const sets = {
+          lowercase: false,
+          uppercase: false,
+          digit: false,
+          symbol: false
+        };
+
+        for (const char of password) {
+          if (charsetDefinitions.lowercase.includes(char)) sets.lowercase = true;
+          else if (charsetDefinitions.uppercase.includes(char)) sets.uppercase = true;
+          else if (charsetDefinitions.digit.includes(char)) sets.digit = true;
+          else sets.symbol = true;
+        }
+
+        if (sets.lowercase) charsetSize += charsetDefinitions.lowercase.length;
+        if (sets.uppercase) charsetSize += charsetDefinitions.uppercase.length;
+        if (sets.digit) charsetSize += charsetDefinitions.digit.length;
+        if (sets.symbol) charsetSize += charsetDefinitions.symbol.length;
+
+        if (charsetSize === 0) charsetSize = 26; // default to lowercase only
+
+        const combinations = BigInt(charsetSize) ** BigInt(password.length);
+        const guessesPerSecond = BigInt(1_000_000_000); // 1 billion guesses per second
+        const totalSeconds = combinations / guessesPerSecond;
+
+        return formatDuration(totalSeconds);
+      }
+
+      function formatDuration(secondsBigInt) {
+        const secondsPerYear = BigInt(60 * 60 * 24 * 365);
+        const secondsPerDay = BigInt(60 * 60 * 24);
+        const secondsPerHour = BigInt(60 * 60);
+        const secondsPerMinute = BigInt(60);
+
+        if (secondsBigInt <= secondsPerMinute) return '< 1 minute';
+        if (secondsBigInt <= secondsPerHour) return `${Number(secondsBigInt / secondsPerMinute)} minutes`;
+        if (secondsBigInt <= secondsPerDay) return `${Number(secondsBigInt / secondsPerHour)} hours`;
+        if (secondsBigInt <= secondsPerYear) return `${Number(secondsBigInt / secondsPerDay)} days`;
+        const years = secondsBigInt / secondsPerYear;
+        if (years <= BigInt(1000000)) {
+          return `${Number(years)} years`;
+        }
+        return `${Number(years / BigInt(1000000))} million years`;
+      }
+
+      function computeDamage() {
+        if (!battleContext) return { monsterDamage: 0, playerDamage: 0 };
+        const monsterAtk = Math.max(1, battleContext.monster.stats.atk);
+        const playerAtk = Math.max(1, battleContext.player.stats.atk);
+        const monsterHp = Math.max(1, battleContext.monster.stats.hp);
+        return {
+          monsterDamage: Math.min(monsterHp, Math.round(playerAtk * 1.2)),
+          playerDamage: monsterAtk
+        };
+      }
+
+      let pendingResult = null;
+
+      function showReturnState(result) {
+        submitBtn.disabled = true;
+        passwordInput.disabled = true;
+        fleeBtn.textContent = 'Return to Tower';
+        fleeBtn.disabled = false;
+        fleeBtn.dataset.return = 'true';
+        pendingResult = result;
+      }
+
+      function sendPendingResult() {
+        if (!pendingResult) return;
+        window.parent.postMessage({ type: 'battle:result', payload: pendingResult }, '*');
+        pendingResult = null;
+      }
+
+      function handleSuccess(password) {
+        clearInterval(countdownTimer);
+        const { monsterDamage, playerDamage } = computeDamage();
+        const bruteForceEstimate = estimateBruteForceTime(password);
+        resultEl.classList.remove('danger');
+        resultEl.classList.add('success');
+        resultEl.textContent = `Password accepted! Estimated brute-force time: ${bruteForceEstimate}.\nYou strike for ${monsterDamage} damage.`;
+
+        showReturnState({
+          outcome: 'victory',
+          message: `Your password baffled ${battleContext.monster.name}!`,
+          player: { deltaHp: -playerDamage },
+          monster: { defeated: monsterDamage >= battleContext.monster.stats.hp, deltaHp: -monsterDamage },
+          rewards: {
+            messages: [
+              `Password length: ${password.length}`,
+              `Crack time: ${bruteForceEstimate}`
+            ]
+          }
+        });
+      }
+
+      function handleFailure(reason) {
+        clearInterval(countdownTimer);
+        const { playerDamage } = computeDamage();
+        resultEl.classList.remove('success');
+        resultEl.classList.add('danger');
+        resultEl.textContent = `${reason}\nYou are struck for ${playerDamage} damage.`;
+
+        showReturnState({
+          outcome: 'defeat',
+          message: `${battleContext.monster.name} exploited your weak password!`,
+          player: { deltaHp: -playerDamage },
+          monster: { defeated: false },
+          rewards: {
+            messages: [reason]
+          }
+        });
+      }
+
+      function submitPassword() {
+        if (!requirements || !battleContext) return;
+        const password = passwordInput.value || '';
+        const { valid, issues } = evaluatePassword(password, requirements);
+        if (!valid) {
+          handleFailure(issues.join('\n'));
+          return;
+        }
+        handleSuccess(password);
+      }
+
+      function retreat() {
+        if (!battleContext) return;
+        clearInterval(countdownTimer);
+        const { playerDamage } = computeDamage();
+        showReturnState({
+          outcome: 'abort',
+          message: `${battleContext.player.name} backed away from ${battleContext.monster.name}.`,
+          player: { deltaHp: -playerDamage },
+          monster: { defeated: false },
+          rewards: {
+            messages: ['Retreating cost you a chunk of HP.']
+          }
+        });
+      }
+
+      submitBtn.addEventListener('click', submitPassword);
+      passwordInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          submitPassword();
+        }
+      });
+      fleeBtn.addEventListener('click', () => {
+        if (fleeBtn.dataset.return === 'true') {
+          sendPendingResult();
+        } else {
+          retreat();
+        }
+      });
+
+      window.addEventListener('message', (event) => {
+        const { data } = event;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'battle:init') {
+          battleContext = data.payload;
+          requirements = pickRequirement();
+          requirementsEl.textContent = describeRequirements(requirements);
+          startTimer(requirements.timeLimit);
+          resultEl.textContent = 'Forge an unbreakable password that meets every rule.';
+          resultEl.classList.remove('danger', 'success');
+          passwordInput.value = '';
+          passwordInput.disabled = false;
+          submitBtn.disabled = false;
+          fleeBtn.disabled = false;
+          fleeBtn.textContent = 'Retreat';
+          delete fleeBtn.dataset.return;
+          pendingResult = null;
+          passwordInput.focus();
+          statsEl.textContent = `Monster ATK: ${battleContext.monster.stats.atk} | Player ATK: ${battleContext.player.stats.atk}`;
+          window.parent.postMessage({ type: 'battle:ready' }, '*');
+        }
+      });
+    </script>
+  </body>
+</html>
