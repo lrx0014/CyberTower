@@ -1,0 +1,8 @@
+{
+  "id": "quiz",
+  "name": "Cybersecurity Quiz Duel",
+  "description": "Answer cybersecurity questions to defeat your foe.",
+  "entry": "index.html",
+  "timeoutMs": 60000,
+  "allow": "fullscreen"
+}

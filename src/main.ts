@@ -1,5 +1,10 @@
 import Phaser from 'phaser';
-import { initialiseMiniGameHost, registerMiniGames } from './battle/miniGameManager';
+import {
+  initialiseMiniGameHost,
+  registerMiniGames,
+  loadMiniGamesFromManifest,
+  setMiniGames
+} from './battle/miniGameManager';
 import CombatScene from './scenes/CombatScene';
 import TutorialScene, {
   DEFAULT_GAME_HEIGHT,
@@ -104,14 +109,25 @@ initialiseMiniGameHost({
   loading: miniGameLoading
 });
 
-registerMiniGames([
-  {
-    id: 'sample-skill-challenge',
-    name: 'Sample Skill Challenge',
-    url: '/mini-games/quiz/index.html',
-    timeoutMs: 600000
-  }
-]);
+const fallbackMiniGame = {
+  id: 'quiz',
+  name: 'Cybersecurity Quiz Duel',
+  url: '/mini-games/quiz/index.html',
+  timeoutMs: 60000
+};
+
+registerMiniGames([fallbackMiniGame]);
+
+loadMiniGamesFromManifest('/mini-games/loader.json')
+  .then((descriptors) => {
+    if (Array.isArray(descriptors) && descriptors.length > 0) {
+      setMiniGames(descriptors);
+    }
+  })
+  .catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error('[battle] failed to load mini-game list', err);
+  });
 
 const postMessage = (text: string) => {
   msgEl.textContent = text;

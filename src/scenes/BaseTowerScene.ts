@@ -7,7 +7,7 @@ import storyManager from '../story/storyManager';
 import { StoryNodeEvent } from '../story/storyTypes';
 import { DoorData, ItemData, MonsterStats, PlayerState, TileKey, TileType, UIHooks } from '../global/types';
 import { BattleContext, BattleResult } from '../battle/types';
-import { launchMiniGame } from '../battle/miniGameManager';
+import { launchMiniGame, selectMiniGame } from '../battle/miniGameManager';
 
 export const DEFAULT_GAME_WIDTH = 48 * 15 + 24;
 export const DEFAULT_GAME_HEIGHT = 48 * 15 + 24;
@@ -387,7 +387,7 @@ export class BaseTowerScene extends Phaser.Scene {
     super({ key: config.key });
     this.towerConfig = config;
     this.displayName = config.displayName;
-    this.defaultMiniGameId = config.defaultMiniGameId ?? 'sample-skill-challenge';
+    this.defaultMiniGameId = config.defaultMiniGameId ?? 'quiz';
   }
 
   preload() {
@@ -1045,10 +1045,9 @@ export class BaseTowerScene extends Phaser.Scene {
     if (!state) {
       throw new Error('Cannot create battle context without player state.');
     }
-    const miniGameId =
-      monster.battleMiniGameId && monster.battleMiniGameId.trim().length > 0
-        ? monster.battleMiniGameId.trim()
-        : this.defaultMiniGameId;
+    const selectedMiniGame =
+      selectMiniGame(monster.battleMiniGameId) ?? selectMiniGame(this.defaultMiniGameId);
+    const miniGameId = selectedMiniGame?.id ?? this.defaultMiniGameId;
 
     return {
       id: `${this.scene.key}:${tileKey}:${Date.now()}`,
@@ -1064,7 +1063,9 @@ export class BaseTowerScene extends Phaser.Scene {
         id: tileKey,
         name: monster.name,
         stats: { hp: monster.hp, atk: monster.atk, def: monster.def },
-        miniGameId
+        miniGameId,
+        miniGameName: selectedMiniGame?.name,
+        miniGameDescription: selectedMiniGame?.description
       },
       environment: {
         position: { x: position.x, y: position.y },

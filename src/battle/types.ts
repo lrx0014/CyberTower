@@ -16,6 +16,8 @@ export interface BattleContext {
     name: string;
     stats: Pick<MonsterStats, 'hp' | 'atk' | 'def'>;
     miniGameId: string;
+    miniGameName?: string;
+    miniGameDescription?: string;
   };
   environment: {
     position: Vec2;

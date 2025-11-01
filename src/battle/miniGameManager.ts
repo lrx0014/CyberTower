@@ -6,6 +6,7 @@ export interface MiniGameDescriptor {
   url: string;
   allow?: string;
   timeoutMs?: number;
+  description?: string;
 }
 
 export interface MiniGameHostElements {
@@ -31,7 +32,7 @@ const registry = new Map<string, MiniGameDescriptor>();
 let host: MiniGameHostElements | null = null;
 let activeSession: ActiveMiniGameSession | null = null;
 
-export const DEFAULT_MINI_GAME_ID = 'sample-skill-challenge';
+export const DEFAULT_MINI_GAME_ID = 'quiz';
 
 export function initialiseMiniGameHost(elements: MiniGameHostElements) {
   host = elements;
@@ -42,6 +43,116 @@ export function registerMiniGames(descriptors: MiniGameDescriptor[]) {
   descriptors.forEach((descriptor) => {
     registry.set(descriptor.id, descriptor);
   });
+}
+
+export function setMiniGames(descriptors: MiniGameDescriptor[]) {
+  registry.clear();
+  registerMiniGames(descriptors);
+}
+
+export function getRegisteredMiniGames(): MiniGameDescriptor[] {
+  return Array.from(registry.values());
+}
+
+export function selectMiniGame(preferredId?: string): MiniGameDescriptor | undefined {
+  if (preferredId) {
+    const trimmed = preferredId.trim();
+    if (trimmed.length > 0) {
+      const preferred = registry.get(trimmed);
+      if (preferred) {
+        return preferred;
+      }
+    }
+  }
+  const all = getRegisteredMiniGames();
+  if (all.length === 0) {
+    return undefined;
+  }
+  const randomIndex = Math.floor(Math.random() * all.length);
+  return all[randomIndex];
+}
+
+export async function loadMiniGamesFromManifest(indexUrl = '/mini-games/loader.json') {
+  const descriptors: MiniGameDescriptor[] = [];
+  try {
+    const indexResponse = await fetch(indexUrl, { cache: 'no-cache' });
+    if (!indexResponse.ok) {
+      throw new Error(`Failed to fetch manifest index ${indexUrl}: ${indexResponse.status}`);
+    }
+    const indexEntries = (await indexResponse.json()) as Array<{
+      id?: string;
+      manifest?: string;
+      url?: string;
+      allow?: string;
+      timeoutMs?: number;
+      name?: string;
+      description?: string;
+    }>;
+    if (Array.isArray(indexEntries)) {
+      const origin = window.location.origin;
+      const absoluteIndexUrl = new URL(indexUrl, origin);
+      for (const entry of indexEntries) {
+        if (!entry || typeof entry !== 'object') continue;
+        try {
+          if (entry.manifest) {
+            const manifestUrl = new URL(entry.manifest, absoluteIndexUrl);
+            const manifestResponse = await fetch(manifestUrl.toString(), { cache: 'no-cache' });
+            if (!manifestResponse.ok) {
+              // eslint-disable-next-line no-console
+              console.warn('[battle] mini-game manifest load failed', manifestUrl.toString(), manifestResponse.status);
+              continue;
+            }
+            const manifest = await manifestResponse.json();
+            if (!manifest || typeof manifest !== 'object') {
+              continue;
+            }
+            const id = (manifest.id ?? entry.id ?? manifestUrl.pathname.split('/').slice(-2, -1)[0] ?? '').trim();
+            const entryPath = typeof manifest.entry === 'string' ? manifest.entry.trim() : '';
+            const url = typeof manifest.url === 'string' && manifest.url.trim().length > 0
+              ? manifest.url.trim()
+              : entryPath
+                ? new URL(entryPath, manifestUrl).toString()
+                : undefined;
+            if (!id || !url) {
+              continue;
+            }
+            descriptors.push({
+              id,
+              name: manifest.name || id,
+              description: manifest.description || entry.description,
+              url,
+              allow: manifest.allow || entry.allow,
+              timeoutMs: manifest.timeoutMs ?? entry.timeoutMs
+            });
+          } else if (entry.url) {
+            const id = (entry.id || new URL(entry.url, absoluteIndexUrl).pathname.split('/').pop() || '').trim();
+            if (!id) continue;
+            const url = new URL(entry.url, absoluteIndexUrl).toString();
+            descriptors.push({
+              id,
+              name: entry.name || id,
+              description: entry.description,
+              url,
+              allow: entry.allow,
+              timeoutMs: entry.timeoutMs
+            });
+          }
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('[battle] mini-game manifest entry invalid', entry, err);
+        }
+      }
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[battle] failed to load mini-game manifests', err);
+    throw err;
+  }
+
+  if (descriptors.length > 0) {
+    setMiniGames(descriptors);
+  }
+  return descriptors;
 }
 
 export function getMiniGameDescriptor(id: string): MiniGameDescriptor | undefined {

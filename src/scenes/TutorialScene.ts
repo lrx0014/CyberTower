@@ -21,7 +21,7 @@ const TUTORIAL_SCENE_CONFIG: TowerSceneConfig = {
   mapKey: 'scene_1_tutorial',
   mapPath: 'assets/scene_1_tutorial.json',
   displayName: 'Lobby',
-  defaultMiniGameId: 'sample-skill-challenge'
+  defaultMiniGameId: 'quiz'
 };
 
 export default class TutorialScene extends BaseTowerScene {

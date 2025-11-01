@@ -102,7 +102,7 @@
       </div>
       <div class="buttons">
         <button type="button" class="win" id="btn-start">Start Quiz</button>
-        <button type="button" class="lose" id="btn-flee">Retreat</button>
+        <button type="button" class="lose" id="btn-flee">Surrender</button>
       </div>
     </div>
 
@@ -319,8 +319,11 @@ Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.sta
         if (!data || typeof data !== 'object') return;
         if (data.type === 'battle:init') {
           battleContext = data.payload;
-          titleEl.textContent = `${battleContext.monster.name} challenges you!`;
-          statusEl.textContent = 'Ready';
+          const displayTitle =
+            (battleContext.monster && battleContext.monster.miniGameName) || 'Cybersecurity Quiz Duel';
+          titleEl.textContent = displayTitle;
+          const description = battleContext.monster?.miniGameDescription;
+          statusEl.textContent = description || 'Ready';
           quizArea.classList.add('hidden');
           startBtn.disabled = false;
           startBtn.classList.remove('hidden');

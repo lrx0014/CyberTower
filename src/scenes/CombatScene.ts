@@ -8,7 +8,7 @@ const COMBAT_SCENE_CONFIG: TowerSceneConfig = {
   mapKey: 'scene_2_combat',
   mapPath: 'assets/scene_2_combat.json',
   displayName: 'Floor 1',
-  defaultMiniGameId: 'sample-skill-challenge'
+  defaultMiniGameId: 'quiz'
 };
 
 interface CombatSceneData {
