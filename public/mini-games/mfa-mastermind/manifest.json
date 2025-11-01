@@ -1,0 +1,8 @@
+{
+  "id": "mfa-mastermind",
+  "name": "MFA Mastermind",
+  "description": "Review login attempts and apply the right multi-factor action.",
+  "entry": "index.html",
+  "timeoutMs": 70000,
+  "allow": "fullscreen"
+}

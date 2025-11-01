@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MFA Mastermind</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at top, #13203a, #05070d 65%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f4f7ff;
+      }
+
+      .card {
+        width: min(680px, 95vw);
+        background: rgba(11, 17, 29, 0.95);
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 30px;
+        box-shadow: 0 28px 55px rgba(0, 0, 0, 0.45);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.85rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .stats {
+        font-size: 0.95rem;
+        color: #9cadcf;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .timer {
+        font-size: 1.35rem;
+        font-weight: 600;
+        text-align: center;
+        color: #ffc87d;
+        letter-spacing: 0.08em;
+      }
+
+      .attempt {
+        background: rgba(22, 30, 48, 0.82);
+        border-radius: 14px;
+        padding: 18px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .attempt h2 {
+        margin: 0;
+        font-size: 1.15rem;
+      }
+
+      .details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        font-size: 0.93rem;
+        color: #d7def5;
+      }
+
+      .factor-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .factor {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+      }
+
+      .factor.strong {
+        background: rgba(93, 216, 165, 0.22);
+        color: #8df5c3;
+      }
+
+      .factor.weak {
+        background: rgba(255, 166, 102, 0.22);
+        color: #ffc89e;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        flex: 1 1 180px;
+        padding: 14px 16px;
+        border-radius: 999px;
+        border: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.approve {
+        background: linear-gradient(135deg, #6ee7ff, #4797ff);
+        color: #081224;
+      }
+
+      button.deny {
+        background: linear-gradient(135deg, #ff7e7e, #ff3d81);
+        color: #17060a;
+      }
+
+      button.stepup {
+        background: linear-gradient(135deg, #ffd666, #ff934b);
+        color: #241200;
+      }
+
+      button.surrender {
+        background: rgba(255, 255, 255, 0.08);
+        color: #dde3ff;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 26px rgba(0, 0, 0, 0.25);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .feedback {
+        min-height: 56px;
+        background: rgba(23, 32, 54, 0.65);
+        border-radius: 12px;
+        padding: 16px 18px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #e1e5ff;
+        white-space: pre-line;
+      }
+
+      .feedback.success {
+        color: #86f5af;
+      }
+
+      .feedback.error {
+        color: #ff9cab;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>MFA Mastermind</h1>
+      <div class="stats" id="stats">Loading battle context...</div>
+      <div class="timer" id="timer">--</div>
+
+      <div class="attempt hidden" id="attempt-card">
+        <h2 id="attempt-title"></h2>
+        <div class="details">
+          <div>Device: <span id="attempt-device"></span></div>
+          <div>Location: <span id="attempt-location"></span></div>
+          <div>Time: <span id="attempt-time"></span></div>
+        </div>
+        <div>Factors presented:</div>
+        <div class="factor-list" id="factor-list"></div>
+        <div id="attempt-note"></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="approve" id="btn-approve">Approve</button>
+        <button type="button" class="deny" id="btn-deny">Deny & Report</button>
+        <button type="button" class="stepup" id="btn-stepup">Require Step-Up</button>
+        <button type="button" class="surrender" id="btn-surrender">Surrender</button>
+      </div>
+
+      <div class="feedback" id="feedback">Assess the login attempts and keep attackers locked out.</div>
+    </div>
+
+    <script>
+      const statsEl = document.getElementById('stats');
+      const timerEl = document.getElementById('timer');
+      const attemptCardEl = document.getElementById('attempt-card');
+      const attemptTitleEl = document.getElementById('attempt-title');
+      const attemptDeviceEl = document.getElementById('attempt-device');
+      const attemptLocationEl = document.getElementById('attempt-location');
+      const attemptTimeEl = document.getElementById('attempt-time');
+      const attemptNoteEl = document.getElementById('attempt-note');
+      const factorListEl = document.getElementById('factor-list');
+      const feedbackEl = document.getElementById('feedback');
+      const approveBtn = document.getElementById('btn-approve');
+      const denyBtn = document.getElementById('btn-deny');
+      const stepUpBtn = document.getElementById('btn-stepup');
+      const surrenderBtn = document.getElementById('btn-surrender');
+
+      let battleContext = null;
+      let deck = [];
+      let index = 0;
+      let correctScore = 0;
+      let riskScore = 0;
+      let cautiousScore = 0;
+      let totalSeverity = 0;
+      let timerId = null;
+      let timeRemaining = 0;
+      let pendingResult = null;
+      let inputsLocked = false;
+
+      const TOTAL_ATTEMPTS = 6;
+      const BASE_TIME = 50;
+
+      const ATTEMPT_DECK = [
+        {
+          title: '2:13 AM login from unfamiliar city',
+          device: 'Windows 10 · Edge',
+          location: 'Lagos, Nigeria',
+          time: '02:13 local time',
+          factors: ['Password', 'SMS code'],
+          factorStrength: ['weak', 'weak'],
+          recommended: 'deny',
+          severity: 3,
+          note: 'You never travel to this region; SMS can be SIM swapped.'
+        },
+        {
+          title: 'Authenticator approval on trusted phone',
+          device: 'Pixel 8 · Chrome',
+          location: 'Seattle, USA (usual)',
+          time: '18:02 local time',
+          factors: ['Password', 'TOTP app'],
+          factorStrength: ['weak', 'strong'],
+          recommended: 'approve',
+          severity: 1,
+          note: 'Matches your regular device and uses strong MFA.'
+        },
+        {
+          title: 'Remote server login using backup codes',
+          device: 'Ubuntu Server · SSH',
+          location: 'Frankfurt, Germany',
+          time: '09:45 local time',
+          factors: ['Password', 'Backup codes'],
+          factorStrength: ['weak', 'weak'],
+          recommended: 'stepup',
+          severity: 2,
+          note: 'Backup codes may be compromised—force hardware key verification.'
+        },
+        {
+          title: 'MacOS login with push fatigue',
+          device: 'MacBook Air · Safari',
+          location: 'Boston, USA',
+          time: '23:27 local time',
+          factors: ['Password', 'Push prompt (5 retries)'],
+          factorStrength: ['weak', 'weak'],
+          recommended: 'deny',
+          severity: 3,
+          note: 'Multiple prompts indicate push bombing—deny immediately.'
+        },
+        {
+          title: 'API token access using hardware key',
+          device: 'Headless service · API',
+          location: 'Your data center',
+          time: '10:30 local time',
+          factors: ['Service account key', 'FIDO2 token'],
+          factorStrength: ['strong', 'strong'],
+          recommended: 'approve',
+          severity: 1,
+          note: 'Trusted automation using phishing-resistant factors.'
+        },
+        {
+          title: 'Mobile app login with email fallback',
+          device: 'iPhone 13 · App',
+          location: 'Unknown (VPN)',
+          time: '01:55 local time',
+          factors: ['Password', 'Email link'],
+          factorStrength: ['weak', 'weak'],
+          recommended: 'stepup',
+          severity: 2,
+          note: 'VPN-obscured location and weak email MFA—require stronger proof.'
+        },
+        {
+          title: 'Desktop login with hardware key and device attestation',
+          device: 'Windows 11 · Chrome',
+          location: 'Office subnet',
+          time: '09:05 local time',
+          factors: ['Passwordless passkey'],
+          factorStrength: ['strong'],
+          recommended: 'approve',
+          severity: 1,
+          note: 'Passkeys provide phishing-resistant authentication from a known device.'
+        },
+        {
+          title: 'Cloud console access via SMS code',
+          device: 'Unknown · Browser',
+          location: 'Ho Chi Minh City, Vietnam',
+          time: '04:48 local time',
+          factors: ['Password', 'SMS'],
+          factorStrength: ['weak', 'weak'],
+          recommended: 'deny',
+          severity: 3,
+          note: 'Critical console with only SMS—deny and reset credentials.'
+        }
+      ];
+
+      function pickDeck() {
+        return [...ATTEMPT_DECK].sort(() => Math.random() - 0.5).slice(0, TOTAL_ATTEMPTS);
+      }
+
+      function resetUI() {
+        approveBtn.disabled = false;
+        denyBtn.disabled = false;
+        stepUpBtn.disabled = false;
+        surrenderBtn.disabled = false;
+        surrenderBtn.textContent = 'Surrender';
+        delete surrenderBtn.dataset.return;
+        attemptCardEl.classList.add('hidden');
+        feedbackEl.classList.remove('success', 'error');
+        feedbackEl.textContent = 'Assess the login attempts and keep attackers locked out.';
+      }
+
+      function startTimer(seconds) {
+        clearInterval(timerId);
+        timeRemaining = seconds;
+        timerEl.textContent = `${timeRemaining.toString().padStart(2, '0')}s`;
+        timerId = setInterval(() => {
+          timeRemaining -= 1;
+          if (timeRemaining <= 0) {
+            timerEl.textContent = '00s';
+            clearInterval(timerId);
+            finishRound('timeout');
+          } else {
+            timerEl.textContent = `${timeRemaining.toString().padStart(2, '0')}s`;
+          }
+        }, 1000);
+      }
+
+      function renderAttempt() {
+        if (!deck[index]) {
+          return;
+        }
+        const attempt = deck[index];
+        attemptTitleEl.textContent = attempt.title;
+        attemptDeviceEl.textContent = attempt.device;
+        attemptLocationEl.textContent = attempt.location;
+        attemptTimeEl.textContent = attempt.time;
+        attemptNoteEl.textContent = attempt.note;
+        factorListEl.innerHTML = '';
+        attempt.factors.forEach((factor, idx) => {
+          const chip = document.createElement('span');
+          const strength = attempt.factorStrength?.[idx] === 'strong' ? 'strong' : 'weak';
+          chip.className = `factor ${strength}`;
+          chip.textContent = factor;
+          factorListEl.appendChild(chip);
+        });
+        attemptCardEl.classList.remove('hidden');
+        feedbackEl.classList.remove('success', 'error');
+        feedbackEl.textContent = 'Approve, deny, or force a stronger factor?';
+        approveBtn.disabled = inputsLocked;
+        denyBtn.disabled = inputsLocked;
+        stepUpBtn.disabled = inputsLocked;
+      }
+
+      function lockControls() {
+        inputsLocked = true;
+        approveBtn.disabled = true;
+        denyBtn.disabled = true;
+        stepUpBtn.disabled = true;
+      }
+
+      function unlockControls() {
+        inputsLocked = false;
+        approveBtn.disabled = false;
+        denyBtn.disabled = false;
+        stepUpBtn.disabled = false;
+      }
+
+      function handleDecision(decision) {
+        if (inputsLocked || !deck[index]) return;
+        lockControls();
+        const attempt = deck[index];
+        const severity = attempt.severity || 1;
+        if (decision === attempt.recommended) {
+          correctScore += severity;
+          feedbackEl.classList.remove('error');
+          feedbackEl.classList.add('success');
+          feedbackEl.textContent = `Correct response. ${attempt.note}`;
+        } else {
+          if (decision === 'stepup' && attempt.recommended === 'approve') {
+            cautiousScore += severity;
+            feedbackEl.classList.remove('success');
+            feedbackEl.classList.add('error');
+            feedbackEl.textContent = `Legitimate user inconvenienced. ${attempt.note}`;
+          } else {
+            riskScore += severity;
+            feedbackEl.classList.remove('success');
+            feedbackEl.classList.add('error');
+            feedbackEl.textContent = `That response exposed risk. ${attempt.note}`;
+          }
+        }
+
+        setTimeout(() => {
+          index += 1;
+          if (index >= deck.length) {
+            finishRound('complete');
+          } else {
+            unlockControls();
+            renderAttempt();
+          }
+        }, 1200);
+      }
+
+      function finishRound(reason) {
+        clearInterval(timerId);
+        lockControls();
+        surrenderBtn.disabled = false;
+        attemptCardEl.classList.add('hidden');
+
+        const safeScore = correctScore;
+        const riskyScore = riskScore;
+        const cautiousPenalty = cautiousScore;
+        const total = totalSeverity || 1;
+        const monsterHp = Math.max(1, battleContext?.monster?.stats?.hp || 10);
+        const playerAtk = Math.max(6, battleContext?.player?.stats?.atk || 6);
+        const monsterAtk = Math.max(1, battleContext?.monster?.stats?.atk || 5);
+
+        const monsterDamage = Math.min(monsterHp, Math.round((safeScore / total) * playerAtk));
+        const playerDamage = Math.max(0, Math.round(((riskyScore + cautiousPenalty / 2) / total) * monsterAtk));
+
+        let outcome = 'defeat';
+        if (safeScore > riskyScore + cautiousPenalty && monsterDamage > 0) {
+          outcome = 'victory';
+        }
+        if (reason === 'timeout' && safeScore === 0) {
+          outcome = 'defeat';
+        }
+
+        const summaryLines = [
+          `Correct decisions: ${safeScore}/${totalSeverity} severity`,
+          `Risky approvals/denials: ${riskyScore}/${totalSeverity} severity`,
+          `Unnecessary step-ups: ${cautiousScore}`,
+          `Damage dealt: ${monsterDamage}`,
+          `Damage taken: ${playerDamage}`
+        ];
+
+        const result = {
+          outcome,
+          message:
+            outcome === 'victory'
+              ? `You locked out ${battleContext.monster.name}'s phishing spree!`
+              : `Attackers slipped past your defenses.`,
+          player: { deltaHp: -playerDamage },
+          monster: { defeated: monsterDamage >= monsterHp, deltaHp: -monsterDamage },
+          rewards: {
+            messages: summaryLines
+          }
+        };
+
+        showReturnState(result, summaryLines);
+      }
+
+      function showReturnState(result, summaryLines) {
+        feedbackEl.classList.remove('error', 'success');
+        feedbackEl.textContent = summaryLines.join('\n');
+        surrenderBtn.textContent = 'Return to Tower';
+        surrenderBtn.dataset.return = 'true';
+        surrenderBtn.disabled = false;
+        pendingResult = result;
+      }
+
+      function sendPendingResult() {
+        if (!pendingResult) return;
+        window.parent.postMessage({ type: 'battle:result', payload: pendingResult }, '*');
+        pendingResult = null;
+      }
+
+      function retreatEarly() {
+        clearInterval(timerId);
+        if (!battleContext) {
+          window.parent.postMessage(
+            {
+              type: 'battle:result',
+              payload: {
+                outcome: 'abort',
+                message: 'You withdrew from the MFA audit.',
+                player: { deltaHp: -5 },
+                monster: { defeated: false }
+              }
+            },
+            '*'
+          );
+          return;
+        }
+        const monsterAtk = Math.max(1, battleContext.monster.stats.atk);
+        const playerDamage = Math.max(4, Math.round(monsterAtk * 0.75));
+        showReturnState(
+          {
+            outcome: 'abort',
+            message: `${battleContext.player.name} abandoned the MFA review.`,
+            player: { deltaHp: -playerDamage },
+            monster: { defeated: false },
+            rewards: {
+              messages: ['Backing out let the phisher keep trying.']
+            }
+          },
+          [`Surrendered the audit. You suffer ${playerDamage} damage.`]
+        );
+      }
+
+      approveBtn.addEventListener('click', () => handleDecision('approve'));
+      denyBtn.addEventListener('click', () => handleDecision('deny'));
+      stepUpBtn.addEventListener('click', () => handleDecision('stepup'));
+      surrenderBtn.addEventListener('click', () => {
+        if (surrenderBtn.dataset.return === 'true') {
+          sendPendingResult();
+        } else {
+          retreatEarly();
+        }
+      });
+
+      window.addEventListener('message', (event) => {
+        const { data } = event;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'battle:init') {
+          battleContext = data.payload;
+          deck = pickDeck();
+          totalSeverity = deck.reduce((sum, card) => sum + (card.severity || 1), 0);
+          correctScore = 0;
+          riskScore = 0;
+          cautiousScore = 0;
+          index = 0;
+          pendingResult = null;
+          inputsLocked = false;
+          resetUI();
+          statsEl.textContent = `Monster ATK: ${battleContext.monster.stats.atk} | Player ATK: ${battleContext.player.stats.atk}`;
+          renderAttempt();
+          startTimer(BASE_TIME);
+          window.parent.postMessage({ type: 'battle:ready' }, '*');
+        }
+      });
+    </script>
+  </body>
+</html>

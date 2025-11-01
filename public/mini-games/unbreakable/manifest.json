@@ -3,6 +3,6 @@
   "name": "Unbreakable Password!!",
   "description": "Craft a password that meets every constraint before the timer runs out.",
   "entry": "index.html",
-  "timeoutMs": 90000,
+  "timeoutMs": 600000,
   "allow": "fullscreen"
 }

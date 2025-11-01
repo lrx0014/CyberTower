@@ -1,14 +1,18 @@
 [
   {
+    "id": "mfa-mastermind",
+    "manifest": "mfa-mastermind/manifest.json"
+  },
+  {
+    "id": "privacy-cleanup",
+    "manifest": "privacy-cleanup/manifest.json"
+  },
+  {
     "id": "quiz",
     "manifest": "quiz/manifest.json"
   },
   {
     "id": "unbreakable",
     "manifest": "unbreakable/manifest.json"
-  },
-  {
-    "id": "privacy-cleanup",
-    "manifest": "privacy-cleanup/manifest.json"
   }
 ]
