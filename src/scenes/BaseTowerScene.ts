@@ -6,6 +6,8 @@ import { DoorUnlockerInfo, TowerEventContext } from '../event/context';
 import storyManager from '../story/storyManager';
 import { StoryNodeEvent } from '../story/storyTypes';
 import { DoorData, ItemData, MonsterStats, PlayerState, TileKey, TileType, UIHooks } from '../global/types';
+import { BattleContext, BattleResult } from '../battle/types';
+import { launchMiniGame } from '../battle/miniGameManager';
 
 export const DEFAULT_GAME_WIDTH = 48 * 15 + 24;
 export const DEFAULT_GAME_HEIGHT = 48 * 15 + 24;
@@ -373,16 +375,19 @@ export interface TowerSceneConfig {
   mapKey: string;
   mapPath: string;
   displayName: string;
+  defaultMiniGameId?: string;
 }
 
 export class BaseTowerScene extends Phaser.Scene {
   protected readonly towerConfig: TowerSceneConfig;
   protected displayName: string;
+  protected readonly defaultMiniGameId: string;
 
   constructor(config: TowerSceneConfig) {
     super({ key: config.key });
     this.towerConfig = config;
     this.displayName = config.displayName;
+    this.defaultMiniGameId = config.defaultMiniGameId ?? 'sample-skill-challenge';
   }
 
   preload() {
@@ -406,12 +411,7 @@ export class BaseTowerScene extends Phaser.Scene {
   create() {
     activeScene = this;
     this.isTransitioning = false;
-    if (this.input) {
-      this.input.enabled = true;
-      if (this.input.keyboard) {
-        this.input.keyboard.enabled = true;
-      }
-    }
+    this.setControlsEnabled(true);
     const teardown = () => {
       if (activeScene === this) activeScene = null;
       this.unregisterEventHandlers();
@@ -715,7 +715,11 @@ export class BaseTowerScene extends Phaser.Scene {
           name: (props.name as string) || displayName || 'Monster',
           hp: Number(props.hp ?? 20),
           atk: Number(props.atk ?? 5),
-          def: Number(props.def ?? 0)
+          def: Number(props.def ?? 0),
+          battleMiniGameId:
+            typeof props.minigame === 'string' && props.minigame.trim().length > 0
+              ? props.minigame.trim()
+              : undefined
         });
         break;
       default:
@@ -952,7 +956,10 @@ export class BaseTowerScene extends Phaser.Scene {
       getDoorData: (tileKey) => doorData.get(tileKey),
       getMonsterData: (tileKey) => monsterData.get(tileKey),
       getSceneDisplayName: () => this.displayName,
-      getStairsData: (tileKey) => stairsData.get(tileKey)
+      getStairsData: (tileKey) => stairsData.get(tileKey),
+      createBattleContext: (monster, position, tileKey) =>
+        this.buildBattleContext(monster, position, tileKey),
+      runBattle: (battleContext) => this.runBattle(battleContext)
     };
   }
 
@@ -1034,6 +1041,68 @@ export class BaseTowerScene extends Phaser.Scene {
     }
   }
 
+  protected buildBattleContext(monster: MonsterStats, position: Vec2, tileKey: TileKey): BattleContext {
+    if (!state) {
+      throw new Error('Cannot create battle context without player state.');
+    }
+    const miniGameId =
+      monster.battleMiniGameId && monster.battleMiniGameId.trim().length > 0
+        ? monster.battleMiniGameId.trim()
+        : this.defaultMiniGameId;
+
+    return {
+      id: `${this.scene.key}:${tileKey}:${Date.now()}`,
+      sceneKey: this.scene.key,
+      sceneName: this.displayName,
+      player: {
+        name: state.name,
+        stats: { hp: state.hp, atk: state.atk, def: state.def },
+        inventory: { ...state.inventory },
+        keys: state.keys
+      },
+      monster: {
+        id: tileKey,
+        name: monster.name,
+        stats: { hp: monster.hp, atk: monster.atk, def: monster.def },
+        miniGameId
+      },
+      environment: {
+        position: { x: position.x, y: position.y },
+        seed: Date.now(),
+        extra: this.getBattleEnvironmentExtras(monster, position, tileKey)
+      }
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  protected getBattleEnvironmentExtras(
+    _monster: MonsterStats,
+    _position: Vec2,
+    _tileKey: TileKey
+  ): Record<string, unknown> | undefined {
+    return undefined;
+  }
+
+  protected async runBattle(context: BattleContext): Promise<BattleResult> {
+    this.setControlsEnabled(false);
+    try {
+      return await launchMiniGame(context.monster.miniGameId, context);
+    } finally {
+      if (!this.isTransitioning) {
+        this.setControlsEnabled(true);
+      }
+    }
+  }
+
+  protected setControlsEnabled(enabled: boolean) {
+    if (this.input) {
+      this.input.enabled = enabled;
+      if (this.input.keyboard) {
+        this.input.keyboard.enabled = enabled;
+      }
+    }
+  }
+
   protected handleStairsEncounter(_info: StairsEncounterInfo, defaultAction: () => void) {
     defaultAction();
   }
@@ -1041,12 +1110,7 @@ export class BaseTowerScene extends Phaser.Scene {
   protected transitionToScene(startNext: () => void, duration = OUTRO_FADE_DURATION) {
     if (this.isTransitioning) return;
     this.isTransitioning = true;
-    if (this.input) {
-      this.input.enabled = false;
-      if (this.input.keyboard) {
-        this.input.keyboard.enabled = false;
-      }
-    }
+    this.setControlsEnabled(false);
     if (this.bannerText) {
       this.bannerText.destroy();
       this.bannerText = undefined;

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { initialiseMiniGameHost, registerMiniGames } from './battle/miniGameManager';
 import CombatScene from './scenes/CombatScene';
 import TutorialScene, {
   DEFAULT_GAME_HEIGHT,
@@ -30,6 +31,9 @@ const journalModal = document.getElementById('journal-modal');
 const journalCloseButton = document.getElementById('journal-close');
 const journalNav = document.getElementById('journal-nav');
 const journalContent = document.getElementById('journal-content');
+const miniGameOverlay = document.getElementById('minigame-overlay');
+const miniGameFrame = document.getElementById('minigame-frame');
+const miniGameLoading = document.getElementById('minigame-loading');
 
 // for debug
 const debugToggle = document.getElementById('debug-toggle');
@@ -60,6 +64,9 @@ if (
   !(journalCloseButton instanceof HTMLButtonElement) ||
   !(journalNav instanceof HTMLElement) ||
   !(journalContent instanceof HTMLElement) ||
+  !(miniGameOverlay instanceof HTMLElement) ||
+  !(miniGameFrame instanceof HTMLIFrameElement) ||
+  !(miniGameLoading instanceof HTMLElement) ||
   !(resetButton instanceof HTMLButtonElement) ||
   !(hintButton instanceof HTMLButtonElement) ||
   !(debugToggle instanceof HTMLButtonElement) ||
@@ -90,6 +97,21 @@ initialiseJournalUI({
   list: journalNav,
   content: journalContent
 });
+
+initialiseMiniGameHost({
+  overlay: miniGameOverlay,
+  frame: miniGameFrame,
+  loading: miniGameLoading
+});
+
+registerMiniGames([
+  {
+    id: 'sample-skill-challenge',
+    name: 'Sample Skill Challenge',
+    url: '/mini-games/sample/index.html',
+    timeoutMs: 600000
+  }
+]);
 
 const postMessage = (text: string) => {
   msgEl.textContent = text;

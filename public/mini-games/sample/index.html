@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cybersecurity Quiz Duel</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        background: radial-gradient(circle at top, #1e2a44, #0b121f);
+        color: #f5f7ff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card {
+        width: min(500px, 90vw);
+        background: rgba(15, 21, 34, 0.95);
+        border-radius: 16px;
+        padding: 32px 28px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        letter-spacing: 0.04em;
+      }
+
+      .details {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #c9d5ff;
+      }
+
+      .buttons {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        min-width: 120px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      button.win {
+        background: linear-gradient(135deg, #3bd16f, #1ca75c);
+        color: #041108;
+      }
+
+      button.lose {
+        background: linear-gradient(135deg, #ff7070, #d63636);
+        color: #ffe6e6;
+      }
+
+      button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 24px rgba(0, 0, 0, 0.2);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .status {
+        font-size: 0.85rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1 id="battle-title">Cybersecurity Quiz Duel</h1>
+      <div class="details" id="battle-details">Awaiting context...</div>
+      <div class="status" id="battle-status">Loading</div>
+      <div id="quiz-area" class="quiz hidden">
+        <div class="question" id="quiz-question"></div>
+        <div class="options" id="quiz-options"></div>
+        <div class="progress" id="quiz-progress"></div>
+      </div>
+      <div class="buttons">
+        <button type="button" class="win" id="btn-start">Start Quiz</button>
+        <button type="button" class="lose" id="btn-flee">Retreat</button>
+      </div>
+    </div>
+
+    <script>
+      const titleEl = document.getElementById('battle-title');
+      const detailsEl = document.getElementById('battle-details');
+      const statusEl = document.getElementById('battle-status');
+      const startBtn = document.getElementById('btn-start');
+      const fleeBtn = document.getElementById('btn-flee');
+      const quizArea = document.getElementById('quiz-area');
+      const questionEl = document.getElementById('quiz-question');
+      const optionsEl = document.getElementById('quiz-options');
+      const progressEl = document.getElementById('quiz-progress');
+
+      let battleContext = null;
+      let currentQuestionIndex = 0;
+      let correctCount = 0;
+
+      const questions = [
+        {
+          text: 'Which of the following is the strongest password?',
+          options: [
+            'P@ssword123',
+            'Summer2024',
+            'C0mplex!Phrase#742',
+            'JohnSmith'
+          ],
+          answer: 2,
+          explanation: 'Combining length, case variety, numbers, and symbols yields the strongest password.'
+        },
+        {
+          text: 'You receive an unexpected email asking you to “verify your account” with a link. What should you do?',
+          options: [
+            'Click the link and enter your credentials.',
+            'Forward the email to your coworkers.',
+            'Ignore it because IT will handle everything.',
+            'Inspect the sender and contact the company via official channels.'
+          ],
+          answer: 3,
+          explanation: 'Always verify through trusted contact methods; phishing emails often mimic real services.'
+        },
+        {
+          text: 'Which multi-factor authentication (MFA) option offers the best protection?',
+          options: [
+            'SMS code sent to your phone',
+            'Email code to your inbox',
+            'Authenticator app or security key',
+            'Security questions about your childhood'
+          ],
+          answer: 2,
+          explanation: 'Authenticator apps and hardware keys resist SIM swapping and credential stuffing.'
+        },
+        {
+          text: 'What is the primary purpose of a VPN when using public Wi-Fi?',
+          options: [
+            'Blocking ads on websites',
+            'Encrypting traffic to prevent eavesdropping',
+            'Speeding up your internet connection',
+            'Providing automatic virus scanning'
+          ],
+          answer: 1,
+          explanation: 'VPNs secure your connection against interception on untrusted networks.'
+        }
+      ];
+
+      function updateDetails() {
+        if (!battleContext) {
+          detailsEl.textContent = 'Awaiting context...';
+          return;
+        }
+        const { player, monster, sceneName } = battleContext;
+        detailsEl.textContent = `${player.name} engages ${monster.name} on ${sceneName}.
+Player HP: ${player.stats.hp} | ATK: ${player.stats.atk} | DEF: ${player.stats.def}
+Monster HP: ${monster.stats.hp} | ATK: ${monster.stats.atk} | DEF: ${monster.stats.def}`;
+      }
+
+      function sendResult(result) {
+        window.parent.postMessage({ type: 'battle:result', payload: result }, '*');
+        statusEl.textContent = 'Result sent. Closing...';
+        startBtn.disabled = true;
+        fleeBtn.disabled = true;
+        quizArea.classList.add('hidden');
+      }
+
+      function showQuestion(index) {
+        const question = questions[index];
+        if (!question) {
+          concludeBattle();
+          return;
+        }
+        questionEl.textContent = question.text;
+        optionsEl.innerHTML = '';
+        question.options.forEach((option, idx) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = option;
+          button.dataset.index = String(idx);
+          button.addEventListener('click', () => handleAnswer(idx));
+          optionsEl.appendChild(button);
+        });
+        progressEl.textContent = `Question ${index + 1} / ${questions.length}`;
+      }
+
+      function handleAnswer(selectedIndex) {
+        const question = questions[currentQuestionIndex];
+        const isCorrect = selectedIndex === question.answer;
+        const buttons = Array.from(optionsEl.querySelectorAll('button'));
+        buttons.forEach((btn, idx) => {
+          btn.disabled = true;
+          if (idx === question.answer) {
+            btn.classList.add('correct');
+          } else if (idx === selectedIndex && !isCorrect) {
+            btn.classList.add('incorrect');
+          }
+        });
+
+        if (isCorrect) {
+          correctCount += 1;
+          statusEl.textContent = 'Correct! You strike the enemy.';
+        } else {
+          statusEl.textContent = `Wrong answer. ${question.explanation}`;
+        }
+
+        setTimeout(() => {
+          currentQuestionIndex += 1;
+          if (currentQuestionIndex < questions.length) {
+            showQuestion(currentQuestionIndex);
+          } else {
+            concludeBattle();
+          }
+        }, 1500);
+      }
+
+      function concludeBattle() {
+        if (!battleContext) return;
+        const questionCount = questions.length;
+        const accuracy = questionCount === 0 ? 0 : correctCount / questionCount;
+        const basePlayerAtk = Math.max(6, battleContext.player.stats.atk || 0);
+        const monsterMaxHp = Math.max(1, battleContext.monster.stats.hp);
+
+        let monsterDamage = Math.round(accuracy * basePlayerAtk);
+        if (correctCount === questionCount) {
+          monsterDamage = monsterMaxHp;
+        }
+        const playerDamage = Math.max(
+          0,
+          Math.round((1 - accuracy) * Math.max(4, battleContext.monster.stats.atk / 2))
+        );
+
+        const defeated = monsterDamage >= monsterMaxHp || correctCount === questionCount;
+        const trimmedMonsterDamage = Math.min(monsterDamage, monsterMaxHp);
+
+        const summaryLines = [
+          `Correct answers: ${correctCount}/${questionCount}`,
+          `You dealt ${trimmedMonsterDamage} damage.`,
+          playerDamage > 0 ? `You suffered ${playerDamage} damage.` : 'You avoided all damage.'
+        ];
+
+        if (defeated) {
+          sendResult({
+            outcome: 'victory',
+            message:
+              correctCount === questionCount
+                ? `Flawless victory! Your perfect answers unraveled ${battleContext.monster.name}.`
+                : `You bested ${battleContext.monster.name} with cybersecurity insight!`,
+            player: { deltaHp: -playerDamage },
+            monster: { defeated: true, deltaHp: -trimmedMonsterDamage },
+            rewards: {
+              messages: summaryLines
+            }
+          });
+        } else {
+          sendResult({
+            outcome: 'defeat',
+            message: `${battleContext.monster.name} exploited your mistakes!`,
+            player: { deltaHp: -playerDamage },
+            monster: { defeated: false, deltaHp: -trimmedMonsterDamage },
+            rewards: {
+              messages: summaryLines
+            }
+          });
+        }
+      }
+
+      function startQuiz() {
+        if (!battleContext) return;
+        statusEl.textContent = 'Answer wisely to triumph!';
+        currentQuestionIndex = 0;
+        correctCount = 0;
+        startBtn.disabled = true;
+        startBtn.classList.add('hidden');
+        quizArea.classList.remove('hidden');
+        showQuestion(currentQuestionIndex);
+      }
+
+      function fleeBattle() {
+        if (!battleContext) return;
+        sendResult({
+          outcome: 'abort',
+          message: `${battleContext.player.name} retreated from ${battleContext.monster.name}.`,
+          player: { deltaHp: -Math.min(10, Math.floor(battleContext.player.stats.hp * 0.1)) },
+          monster: { defeated: false },
+          rewards: {
+            messages: ['You fled the encounter, but took a parting hit.']
+          }
+        });
+      }
+
+      startBtn.addEventListener('click', startQuiz);
+      fleeBtn.addEventListener('click', fleeBattle);
+
+      window.addEventListener('message', (event) => {
+        const { data } = event;
+        if (!data || typeof data !== 'object') return;
+        if (data.type === 'battle:init') {
+          battleContext = data.payload;
+          titleEl.textContent = `${battleContext.monster.name} challenges you!`;
+          statusEl.textContent = 'Ready';
+          quizArea.classList.add('hidden');
+          startBtn.disabled = false;
+          startBtn.classList.remove('hidden');
+          updateDetails();
+          window.parent.postMessage({ type: 'battle:ready' }, '*');
+        }
+      });
+    </script>
+  </body>
+</html>

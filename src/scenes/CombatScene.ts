@@ -1,11 +1,14 @@
 import { BaseTowerScene, TowerSceneConfig, TowerSceneSnapshot } from './BaseTowerScene';
 import type { StairsEncounterInfo } from '../event/events';
+import type { MonsterStats, TileKey } from '../global/types';
+import type { Vec2 } from '../event/bus/eventBus';
 
 const COMBAT_SCENE_CONFIG: TowerSceneConfig = {
   key: 'CombatScene',
   mapKey: 'scene_2_combat',
   mapPath: 'assets/scene_2_combat.json',
-  displayName: 'Floor 1'
+  displayName: 'Floor 1',
+  defaultMiniGameId: 'sample-skill-challenge'
 };
 
 interface CombatSceneData {
@@ -63,5 +66,13 @@ export default class CombatScene extends BaseTowerScene {
     }
 
     defaultAction();
+  }
+
+  protected override getBattleEnvironmentExtras(
+    _monster: MonsterStats,
+    _position: Vec2,
+    _tileKey: TileKey
+  ): Record<string, unknown> | undefined {
+    return { floor: this.currentFloor };
   }
 }

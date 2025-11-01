@@ -1,5 +1,6 @@
 import { Vec2 } from './bus/eventBus';
 import { DoorData, ItemData, MonsterStats, PlayerState, TileKey, TileType } from '../global/types';
+import type { BattleContext, BattleResult } from '../battle/types';
 
 export type MoveBlockReason = 'wall' | 'door' | 'entity' | 'monster' | 'keys' | 'bounds';
 
@@ -40,6 +41,8 @@ export interface TowerEventContext {
   getMonsterData: (tileKey: TileKey) => MonsterStats | undefined;
   getSceneDisplayName: () => string;
   getStairsData: (tileKey: TileKey) => { direction: 'up' | 'down' } | undefined;
+  createBattleContext: (monster: MonsterStats, position: Vec2, tileKey: TileKey) => BattleContext;
+  runBattle: (context: BattleContext) => Promise<BattleResult>;
 }
 
 export interface TowerEventHelpers {

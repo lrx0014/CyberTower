@@ -17,6 +17,7 @@ export interface MonsterStats {
   hp: number;
   atk: number;
   def: number;
+  battleMiniGameId?: string;
 }
 
 export interface ItemData {
