@@ -89,7 +89,7 @@ export const createMonsterEncounterHandler = (
 
     ctx.updateUI();
 
-    const monsterDefeated =
+    let monsterDefeated =
       monsterResult?.defeated !== undefined
         ? monsterResult.defeated
         : outcome === 'victory';
@@ -97,15 +97,27 @@ export const createMonsterEncounterHandler = (
     const trimmedMessage =
       typeof message === 'string' && message.trim().length > 0 ? message.trim() : undefined;
 
-    if (!monsterDefeated) {
-      if (monsterResult?.hp !== undefined) {
-        const updatedMonster = ctx.monsterData.get(tileKey);
-        if (updatedMonster) {
-          updatedMonster.hp = monsterResult.hp;
-          ctx.monsterData.set(tileKey, updatedMonster);
-          ctx.updateMonsterLabel(tileKey, updatedMonster);
+    const existingMonster = ctx.monsterData.get(tileKey);
+    if (existingMonster) {
+      let nextHp = existingMonster.hp;
+      if (monsterResult?.hp !== undefined && Number.isFinite(monsterResult.hp)) {
+        nextHp = Number(monsterResult.hp);
+      } else if (monsterResult?.deltaHp !== undefined && Number.isFinite(monsterResult.deltaHp)) {
+        nextHp = existingMonster.hp + Number(monsterResult.deltaHp);
+      }
+      if (Number.isFinite(nextHp)) {
+        nextHp = Math.max(0, Math.round(nextHp));
+        if (nextHp <= 0) {
+          monsterDefeated = true;
+        } else if (nextHp !== existingMonster.hp) {
+          existingMonster.hp = nextHp;
+          ctx.monsterData.set(tileKey, existingMonster);
+          ctx.updateMonsterLabel(tileKey, existingMonster);
         }
       }
+    }
+
+    if (!monsterDefeated) {
       const reason = trimmedMessage ?? `${monster.name || 'Monster'} stands firm.`;
       ctx.postMsg(reason);
       helpers.enqueueMoveBlocked('monster', position, reason);
