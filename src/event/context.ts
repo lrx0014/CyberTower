@@ -43,6 +43,8 @@ export interface TowerEventContext {
   getStairsData: (tileKey: TileKey) => { direction: 'up' | 'down' } | undefined;
   createBattleContext: (monster: MonsterStats, position: Vec2, tileKey: TileKey) => BattleContext;
   runBattle: (context: BattleContext) => Promise<BattleResult>;
+  updateMonsterLabel: (tileKey: TileKey, stats: MonsterStats | undefined) => void;
+  removeMonsterLabel: (tileKey: TileKey) => void;
 }
 
 export interface TowerEventHelpers {

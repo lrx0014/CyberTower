@@ -407,6 +407,7 @@ export class BaseTowerScene extends Phaser.Scene {
   private pendingSnapshot: TowerSceneSnapshot | null = null;
   private eventUnsubscribes: Array<() => void> = [];
   private lastMoveAttempt: { from: { x: number; y: number }; to: { x: number; y: number } } | null = null;
+  private monsterLabels = new Map<TileKey, Phaser.GameObjects.Text>();
 
   create() {
     activeScene = this;
@@ -421,6 +422,7 @@ export class BaseTowerScene extends Phaser.Scene {
         this.bannerText.destroy();
         this.bannerText = undefined;
       }
+      this.clearMonsterLabels();
     };
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, teardown);
@@ -468,6 +470,7 @@ export class BaseTowerScene extends Phaser.Scene {
 
     map = Array.from({ length: ROWS }, () => Array(COLS).fill(TileType.FLOOR));
     monsterData.clear();
+    this.clearMonsterLabels();
     itemData.clear();
     doorData.clear();
     itemCatalog.clear();
@@ -721,6 +724,12 @@ export class BaseTowerScene extends Phaser.Scene {
               ? props.minigame.trim()
               : undefined
         });
+        {
+          const stats = monsterData.get(key);
+          if (stats) {
+            this.upsertMonsterLabel(key, stats);
+          }
+        }
         break;
       default:
         break;
@@ -840,10 +849,57 @@ export class BaseTowerScene extends Phaser.Scene {
 
   private removeMonsterTile(position: Vec2) {
     this.removeTileAt(position.x, position.y, this.monstersLayer);
+    const key = keyOf(position.x, position.y);
+    this.destroyMonsterLabel(key);
   }
 
   private removeObjectTile(position: Vec2) {
     this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
+  }
+
+  private clearMonsterLabels() {
+    this.monsterLabels.forEach((label) => label.destroy());
+    this.monsterLabels.clear();
+  }
+
+  private destroyMonsterLabel(tileKey: TileKey) {
+    const label = this.monsterLabels.get(tileKey);
+    if (label) {
+      label.destroy();
+      this.monsterLabels.delete(tileKey);
+    }
+  }
+
+  private upsertMonsterLabel(tileKey: TileKey, stats: MonsterStats | undefined) {
+    if (!stats) {
+      this.destroyMonsterLabel(tileKey);
+      return;
+    }
+    const { x, y } = parseTileKey(tileKey);
+    const px = x * CELL + CELL / 2;
+    const py = y * CELL - 2;
+    const textValue = `HP ${Math.max(0, Math.round(stats.hp))}`;
+    let label = this.monsterLabels.get(tileKey);
+    if (!label) {
+      label = this.add.text(px, py, textValue, {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#ff8080',
+        stroke: '#05080d',
+        strokeThickness: 3
+      });
+      label.setOrigin(0.5, 1);
+      label.setDepth(45);
+      this.monsterLabels.set(tileKey, label);
+    } else {
+      label.setPosition(px, py);
+    }
+    label.setText(textValue);
+  }
+
+  private syncMonsterLabels() {
+    this.clearMonsterLabels();
+    monsterData.forEach((stats, key) => this.upsertMonsterLabel(key, stats));
   }
 
   private emitStoryEvent(event: StoryNodeEvent) {
@@ -959,7 +1015,9 @@ export class BaseTowerScene extends Phaser.Scene {
       getStairsData: (tileKey) => stairsData.get(tileKey),
       createBattleContext: (monster, position, tileKey) =>
         this.buildBattleContext(monster, position, tileKey),
-      runBattle: (battleContext) => this.runBattle(battleContext)
+      runBattle: (battleContext) => this.runBattle(battleContext),
+      updateMonsterLabel: (tileKey, stats) => this.upsertMonsterLabel(tileKey, stats),
+      removeMonsterLabel: (tileKey) => this.destroyMonsterLabel(tileKey)
     };
   }
 
@@ -1022,6 +1080,7 @@ export class BaseTowerScene extends Phaser.Scene {
     applyLayerKeys(this.objectsEntityLayer, snapshot.layerSnapshot.objects);
 
     this.lastMoveAttempt = null;
+    this.syncMonsterLabels();
   }
 
   public getDisplayName(): string {

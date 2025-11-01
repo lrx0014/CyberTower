@@ -103,6 +103,7 @@ export const createMonsterEncounterHandler = (
         if (updatedMonster) {
           updatedMonster.hp = monsterResult.hp;
           ctx.monsterData.set(tileKey, updatedMonster);
+          ctx.updateMonsterLabel(tileKey, updatedMonster);
         }
       }
       const reason = trimmedMessage ?? `${monster.name || 'Monster'} stands firm.`;
@@ -115,6 +116,7 @@ export const createMonsterEncounterHandler = (
     ctx.monsterData.delete(tileKey);
     ctx.removeMonsterTile(position);
     ctx.removeObjectTile(position);
+    ctx.removeMonsterLabel(tileKey);
 
     const successMsg =
       trimmedMessage ?? `You defeated ${monster.name || 'the monster'}!`;
