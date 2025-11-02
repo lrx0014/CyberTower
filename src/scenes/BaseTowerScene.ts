@@ -38,6 +38,9 @@ const itemCatalog = new Map<string, { name?: string }>();
 const doorUnlockers = new Map<TileKey, DoorUnlockerInfo>();
 const storyTriggers = new Map<TileKey, { storyId: string; once: boolean }>();
 const stairsData = new Map<TileKey, { direction: 'up' | 'down' }>();
+let activeStoryTile: TileKey | null = null;
+let activeStoryPosition: Vec2 | null = null;
+let activeStoryRemoveOnEnd = false;
 
 type Facing = 'up' | 'down' | 'left' | 'right';
 
@@ -617,8 +620,9 @@ export class BaseTowerScene extends Phaser.Scene {
         this.lastMoveAttempt = null;
       },
       onEnd: () => {
-        this.lastMoveAttempt = null;
+        this.handleStoryEnd();
       },
+      onDestroyCurrent: () => this.handleStoryDestroyRequest(),
       grantItem: (gid, amount, max) => this.grantStoryItem(gid, amount, max),
       getInventoryName: (gid, fallback) => getInventoryName(gid, fallback),
       emitEvent: (event) => this.emitStoryEvent(event)
@@ -845,17 +849,31 @@ export class BaseTowerScene extends Phaser.Scene {
     const toKey = keyOf(nx, ny);
     const storyInfo = storyTriggers.get(toKey);
     if (storyInfo) {
+      const storyTileKey = toKey;
+      const storyPosition = { x: nx, y: ny };
+      this.clearActiveStoryContext();
       storyManager
         .start(storyInfo.storyId)
         .then((started) => {
-          if (started && storyInfo.once) {
-            storyTriggers.delete(toKey);
-            this.removeTileAt(nx, ny, this.objectsEntityLayer);
+          if (!started) {
+            if (activeStoryTile === storyTileKey) {
+              this.clearActiveStoryContext();
+            }
+            return;
+          }
+          activeStoryTile = storyTileKey;
+          activeStoryPosition = storyPosition;
+          activeStoryRemoveOnEnd = !!storyInfo.once;
+          if (storyInfo.once) {
+            storyTriggers.delete(storyTileKey);
           }
         })
         .catch((err) => {
           // eslint-disable-next-line no-console
           console.error('[story] failed to start', storyInfo.storyId, err);
+          if (activeStoryTile === storyTileKey) {
+            this.clearActiveStoryContext();
+          }
         });
       return;
     }
@@ -924,6 +942,35 @@ export class BaseTowerScene extends Phaser.Scene {
 
   private removeObjectTile(position: Vec2) {
     this.removeTileAt(position.x, position.y, this.objectsEntityLayer);
+  }
+
+  private clearActiveStoryContext() {
+    activeStoryTile = null;
+    activeStoryPosition = null;
+    activeStoryRemoveOnEnd = false;
+  }
+
+  private destroyActiveStoryEntity() {
+    if (!activeStoryTile || !activeStoryPosition) {
+      this.clearActiveStoryContext();
+      return;
+    }
+    this.removeObjectTile(activeStoryPosition);
+    storyTriggers.delete(activeStoryTile);
+    this.clearActiveStoryContext();
+  }
+
+  private async handleStoryDestroyRequest(): Promise<void> {
+    this.destroyActiveStoryEntity();
+  }
+
+  private handleStoryEnd() {
+    if (activeStoryRemoveOnEnd) {
+      this.destroyActiveStoryEntity();
+    } else {
+      this.clearActiveStoryContext();
+    }
+    this.lastMoveAttempt = null;
   }
 
   private clearMonsterLabels() {

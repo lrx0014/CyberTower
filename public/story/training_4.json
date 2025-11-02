@@ -143,7 +143,8 @@
       "events": [
         { "type": "article.unlock", "payload": { "article_id": "phishing" } }
       ],
-      "text": "(A new article <Phishing Learn Guide> is now in your Traveler's journal.)"
+      "text": "(A new article <Phishing Learn Guide> is now in your Traveler's journal.)",
+      "destroy": true
     }
   ]
 }

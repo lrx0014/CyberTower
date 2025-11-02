@@ -175,7 +175,8 @@
         "message": "(You got a gleaming blue key.)",
         "limitMessage": "(You already claimed the key.)"
       },
-      "text": "(A new article <Privacy Learn Guide> is now in your Traveler's journal.)"
+      "text": "(A new article <Privacy Learn Guide> is now in your Traveler's journal.)",
+      "destroy": true
     }
   ]
 }

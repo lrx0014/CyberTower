@@ -112,7 +112,8 @@
       "events": [
         { "type": "article.unlock", "payload": { "article_id": "strong_password" } }
       ],
-      "text": "(A new article <Strong Password Learn Guide> is now in your Traveler's journal.)"
+      "text": "(A new article <Strong Password Learn Guide> is now in your Traveler's journal.)",
+      "destroy": true
     }
   ]
 }

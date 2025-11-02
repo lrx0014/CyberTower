@@ -8,6 +8,7 @@ interface StoryManagerOptions {
   grantItem?: (gid: string, amount: number, max?: number) => StoryGrantResult;
   getInventoryName?: (gid: string, fallback?: string) => string;
   emitEvent?: (event: StoryNodeEvent) => void;
+  onDestroyCurrent?: () => Promise<void> | void;
 }
 
 interface StoryGrantResult {
@@ -42,7 +43,7 @@ class StoryManager {
         onNext: () => this.next(),
         onPrev: () => this.prev(),
         onOption: (index) => this.choose(index),
-        onClose: () => this.end()
+        onClose: () => this.closeCurrent()
       });
       this.initialised = true;
     }
@@ -137,11 +138,17 @@ class StoryManager {
     if (this.currentNode.options && this.currentNode.options.length > 0) {
       return;
     }
-    if (this.currentNode.next) {
-      this.setNode(this.currentNode.next);
-    } else {
-      this.end();
-    }
+    const current = this.currentNode;
+
+    const advance = () => {
+      if (current?.next) {
+        this.setNode(current.next);
+      } else {
+        this.end();
+      }
+    };
+
+    void this.maybeDestroyCurrentNode().then(advance);
   }
 
   private prev() {
@@ -155,7 +162,10 @@ class StoryManager {
     if (!this.currentNode || !this.currentNode.options) return;
     const option = this.currentNode.options[index];
     if (!option) return;
-    this.setNode(option.target);
+    const targetId = option.target;
+    void this.maybeDestroyCurrentNode().then(() => {
+      this.setNode(targetId);
+    });
   }
 
   private processReward(node: StoryNode): string | null {
@@ -197,6 +207,27 @@ class StoryManager {
     events.forEach((event) => {
       this.callbacks.emitEvent?.(event);
     });
+  }
+
+  private closeCurrent() {
+    if (!this.currentNode) {
+      void this.end();
+      return;
+    }
+    void this.maybeDestroyCurrentNode().then(() => this.end());
+  }
+
+  private async maybeDestroyCurrentNode() {
+    const node = this.currentNode;
+    if (!node?.destroy) {
+      return;
+    }
+    try {
+      await this.callbacks.onDestroyCurrent?.();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[story] failed to destroy current entity', err);
+    }
   }
 
   async end() {

@@ -55,7 +55,8 @@
     {
       "id": "end",
       "speaker": "System",
-      "text": "(a new article <welcome> is available in your Traveler's journal)"
+      "text": "(a new article <welcome> is available in your Traveler's journal)",
+      "destroy": true
     }
   ]
 }

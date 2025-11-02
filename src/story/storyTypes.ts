@@ -24,6 +24,7 @@ export interface StoryNode {
   options?: StoryOption[];
   reward?: StoryReward;
   events?: StoryNodeEvent[];
+  destroy?: boolean;
 }
 
 export interface StoryData {
