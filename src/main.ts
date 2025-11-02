@@ -51,7 +51,11 @@ const workshopOpenButton = document.getElementById('workshop-open');
 const workshopModal = document.getElementById('workshop-modal');
 const workshopCloseButton = document.getElementById('workshop-close');
 const workshopNotice = document.getElementById('workshop-notice');
-const workshopCta = document.getElementById('workshop-cta');
+const workshopForm = document.getElementById('workshop-form');
+const workshopTemplateSelect = document.getElementById('workshop-template');
+const workshopQuestionsContainer = document.getElementById('workshop-questions');
+const workshopAddQuestionButton = document.getElementById('workshop-add-question');
+const workshopNotesInput = document.getElementById('workshop-notes');
 const miniGameOverlay = document.getElementById('minigame-overlay');
 const miniGameFrame = document.getElementById('minigame-frame');
 const miniGameLoading = document.getElementById('minigame-loading');
@@ -100,7 +104,11 @@ if (
   !(workshopModal instanceof HTMLElement) ||
   !(workshopCloseButton instanceof HTMLButtonElement) ||
   !(workshopNotice instanceof HTMLElement) ||
-  !(workshopCta instanceof HTMLButtonElement) ||
+  !(workshopForm instanceof HTMLFormElement) ||
+  !(workshopTemplateSelect instanceof HTMLSelectElement) ||
+  !(workshopQuestionsContainer instanceof HTMLElement) ||
+  !(workshopAddQuestionButton instanceof HTMLButtonElement) ||
+  !(workshopNotesInput instanceof HTMLTextAreaElement) ||
   !(miniGameOverlay instanceof HTMLElement) ||
   !(miniGameFrame instanceof HTMLIFrameElement) ||
   !(miniGameLoading instanceof HTMLElement) ||
@@ -157,6 +165,23 @@ const arenaLeaderboardData: ArenaLeaderboardEntry[] = [
 
 const arenaRatingFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
 
+interface WorkshopOptionState {
+  id: string;
+  text: string;
+}
+
+interface WorkshopQuestionState {
+  id: string;
+  prompt: string;
+  explanation: string;
+  options: WorkshopOptionState[];
+  correctOptionId: string | null;
+}
+
+const workshopQuestions: WorkshopQuestionState[] = [];
+let workshopQuestionCounter = 0;
+let workshopOptionCounter = 0;
+
 const computeWeekRangeLabel = () => {
   const now = new Date();
   const day = now.getDay(); // Sun = 0, Mon = 1
@@ -195,6 +220,214 @@ const renderArenaLeaderboard = () => {
     item.append(rank, name, rating, record);
     arenaLeaderboardList.appendChild(item);
   });
+};
+
+const MIN_WORKSHOP_OPTIONS = 2;
+const MAX_WORKSHOP_OPTIONS = 6;
+
+const hideWorkshopNotice = () => {
+  workshopNotice.classList.add('hidden');
+  workshopNotice.classList.remove('success', 'error');
+};
+
+const showWorkshopNotice = (message: string, variant: 'info' | 'success' | 'error' = 'info') => {
+  workshopNotice.textContent = message;
+  workshopNotice.classList.remove('hidden', 'success', 'error');
+  if (variant === 'success') {
+    workshopNotice.classList.add('success');
+  } else if (variant === 'error') {
+    workshopNotice.classList.add('error');
+  }
+};
+
+const createWorkshopOption = (): WorkshopOptionState => {
+  workshopOptionCounter += 1;
+  return { id: `option-${workshopOptionCounter}`, text: '' };
+};
+
+const addWorkshopQuestionState = () => {
+  workshopQuestionCounter += 1;
+  const optionA = createWorkshopOption();
+  const optionB = createWorkshopOption();
+  const newQuestion: WorkshopQuestionState = {
+    id: `question-${workshopQuestionCounter}`,
+    prompt: '',
+    explanation: '',
+    options: [optionA, optionB],
+    correctOptionId: optionA.id
+  };
+  workshopQuestions.push(newQuestion);
+};
+
+const removeWorkshopQuestionState = (questionId: string) => {
+  const index = workshopQuestions.findIndex((question) => question.id === questionId);
+  if (index >= 0) {
+    workshopQuestions.splice(index, 1);
+  }
+};
+
+const addWorkshopOptionToQuestion = (questionId: string) => {
+  const question = workshopQuestions.find((item) => item.id === questionId);
+  if (!question) return;
+  if (question.options.length >= MAX_WORKSHOP_OPTIONS) {
+    showWorkshopNotice(`Each question can have up to ${MAX_WORKSHOP_OPTIONS} answer choices.`, 'error');
+    return;
+  }
+  question.options.push(createWorkshopOption());
+};
+
+const removeWorkshopOptionFromQuestion = (questionId: string, optionId: string) => {
+  const question = workshopQuestions.find((item) => item.id === questionId);
+  if (!question) return;
+  if (question.options.length <= MIN_WORKSHOP_OPTIONS) {
+    showWorkshopNotice(`Each question needs at least ${MIN_WORKSHOP_OPTIONS} answer choices.`, 'error');
+    return;
+  }
+  const index = question.options.findIndex((option) => option.id === optionId);
+  if (index >= 0) {
+    question.options.splice(index, 1);
+    if (question.correctOptionId === optionId) {
+      question.correctOptionId = question.options[0]?.id ?? null;
+    }
+  }
+};
+
+const renderWorkshopQuestions = () => {
+  const templateSelected = workshopTemplateSelect.value.trim().length > 0;
+  workshopQuestionsContainer.innerHTML = '';
+
+  if (!templateSelected) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'workshop-empty';
+    placeholder.textContent = 'Select a gameplay template to start crafting new questions.';
+    workshopQuestionsContainer.appendChild(placeholder);
+    return;
+  }
+
+  if (workshopQuestions.length === 0) {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'workshop-empty';
+    placeholder.textContent = 'No questions added yet. Use “Add Question” to begin.';
+    workshopQuestionsContainer.appendChild(placeholder);
+    return;
+  }
+
+  workshopQuestions.forEach((question, index) => {
+    const questionCard = document.createElement('div');
+    questionCard.className = 'workshop-question';
+
+    const header = document.createElement('div');
+    header.className = 'workshop-question-header';
+    const title = document.createElement('h5');
+    title.textContent = `Question ${index + 1}`;
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'workshop-danger';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => {
+      removeWorkshopQuestionState(question.id);
+      renderWorkshopQuestions();
+      hideWorkshopNotice();
+    });
+    header.append(title, removeBtn);
+    questionCard.appendChild(header);
+
+    const promptField = document.createElement('label');
+    promptField.className = 'workshop-field';
+    const promptLabel = document.createElement('span');
+    promptLabel.textContent = 'Question Prompt';
+    const promptTextarea = document.createElement('textarea');
+    promptTextarea.placeholder = 'What is the challenge for the player?';
+    promptTextarea.value = question.prompt;
+    promptTextarea.addEventListener('input', () => {
+      question.prompt = promptTextarea.value;
+      hideWorkshopNotice();
+    });
+    promptField.append(promptLabel, promptTextarea);
+    questionCard.appendChild(promptField);
+
+    const optionsContainer = document.createElement('div');
+    optionsContainer.className = 'workshop-option-list';
+    question.options.forEach((option) => {
+      const optionRow = document.createElement('div');
+      optionRow.className = 'workshop-option';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = `workshop-correct-${question.id}`;
+      radio.value = option.id;
+      radio.checked = question.correctOptionId === option.id;
+      radio.addEventListener('change', () => {
+        question.correctOptionId = option.id;
+        hideWorkshopNotice();
+      });
+
+      const optionInput = document.createElement('input');
+      optionInput.type = 'text';
+      optionInput.placeholder = 'Answer choice';
+      optionInput.value = option.text;
+      optionInput.addEventListener('input', () => {
+        option.text = optionInput.value;
+        hideWorkshopNotice();
+      });
+
+      const removeOptionButton = document.createElement('button');
+      removeOptionButton.type = 'button';
+      removeOptionButton.className = 'workshop-tertiary';
+      removeOptionButton.textContent = 'Remove';
+      removeOptionButton.disabled = question.options.length <= MIN_WORKSHOP_OPTIONS;
+      removeOptionButton.addEventListener('click', () => {
+        if (question.options.length <= MIN_WORKSHOP_OPTIONS) {
+          showWorkshopNotice(
+            `Each question needs at least ${MIN_WORKSHOP_OPTIONS} answer choices.`,
+            'error'
+          );
+          return;
+        }
+        removeWorkshopOptionFromQuestion(question.id, option.id);
+        renderWorkshopQuestions();
+        hideWorkshopNotice();
+      });
+
+      optionRow.append(radio, optionInput, removeOptionButton);
+      optionsContainer.appendChild(optionRow);
+    });
+    questionCard.appendChild(optionsContainer);
+
+    const addOptionButton = document.createElement('button');
+    addOptionButton.type = 'button';
+    addOptionButton.className = 'workshop-tertiary';
+    addOptionButton.textContent = 'Add answer choice';
+    addOptionButton.addEventListener('click', () => {
+      addWorkshopOptionToQuestion(question.id);
+      renderWorkshopQuestions();
+      hideWorkshopNotice();
+    });
+    questionCard.appendChild(addOptionButton);
+
+    const explanationField = document.createElement('label');
+    explanationField.className = 'workshop-field';
+    const explanationLabel = document.createElement('span');
+    explanationLabel.textContent = 'Answer Explanation (optional)';
+    const explanationTextarea = document.createElement('textarea');
+    explanationTextarea.placeholder = 'Let players know why the correct answer is right.';
+    explanationTextarea.value = question.explanation;
+    explanationTextarea.rows = 2;
+    explanationTextarea.addEventListener('input', () => {
+      question.explanation = explanationTextarea.value;
+      hideWorkshopNotice();
+    });
+    explanationField.append(explanationLabel, explanationTextarea);
+    questionCard.appendChild(explanationField);
+
+    workshopQuestionsContainer.appendChild(questionCard);
+  });
+};
+
+const updateWorkshopFormState = () => {
+  const templateSelected = workshopTemplateSelect.value.trim().length > 0;
+  workshopAddQuestionButton.disabled = !templateSelected;
+  renderWorkshopQuestions();
 };
 
 let arenaKeyHandler: ((event: KeyboardEvent) => void) | null = null;
@@ -252,13 +485,15 @@ const closeWorkshopModal = () => {
     window.removeEventListener('keydown', workshopKeyHandler);
     workshopKeyHandler = null;
   }
+  hideWorkshopNotice();
   workshopOpenButton.focus();
 };
 
 const openWorkshopModal = () => {
-  workshopNotice.classList.add('hidden');
+  hideWorkshopNotice();
   workshopModal.classList.remove('hidden');
   workshopModal.focus({ preventScroll: true });
+  updateWorkshopFormState();
   workshopKeyHandler = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -282,11 +517,81 @@ workshopModal.addEventListener('click', (event) => {
   }
 });
 
-workshopCta.addEventListener('click', () => {
-  workshopNotice.textContent =
-    'Creator submissions are coming soon. Subscribe to updates in the full release.';
-  workshopNotice.classList.remove('hidden');
+workshopTemplateSelect.addEventListener('change', () => {
+  hideWorkshopNotice();
+  updateWorkshopFormState();
 });
+
+workshopAddQuestionButton.addEventListener('click', () => {
+  if (!workshopTemplateSelect.value.trim()) {
+    showWorkshopNotice('Choose a gameplay template before adding questions.', 'error');
+    workshopTemplateSelect.focus();
+    return;
+  }
+  addWorkshopQuestionState();
+  renderWorkshopQuestions();
+  hideWorkshopNotice();
+});
+
+workshopForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  hideWorkshopNotice();
+
+  const templateValue = workshopTemplateSelect.value.trim();
+  if (!templateValue) {
+    showWorkshopNotice('Select a gameplay template before submitting.', 'error');
+    workshopTemplateSelect.focus();
+    return;
+  }
+
+  if (workshopQuestions.length === 0) {
+    showWorkshopNotice('Add at least one question to your quiz variant.', 'error');
+    return;
+  }
+
+  for (let i = 0; i < workshopQuestions.length; i += 1) {
+    const question = workshopQuestions[i];
+    const position = i + 1;
+    const prompt = question.prompt.trim();
+    if (!prompt) {
+      showWorkshopNotice(`Question ${position} is missing a prompt.`, 'error');
+      return;
+    }
+    const trimmedOptions = question.options.map((option) => ({
+      id: option.id,
+      text: option.text.trim()
+    }));
+    const filledOptionCount = trimmedOptions.filter((option) => option.text.length > 0).length;
+    if (filledOptionCount < MIN_WORKSHOP_OPTIONS) {
+      showWorkshopNotice(`Question ${position} needs at least two filled answer choices.`, 'error');
+      return;
+    }
+    if (!question.correctOptionId) {
+      showWorkshopNotice(`Select the correct answer for question ${position}.`, 'error');
+      return;
+    }
+    const correctOption = trimmedOptions.find((option) => option.id === question.correctOptionId);
+    if (!correctOption || correctOption.text.length === 0) {
+      showWorkshopNotice(`Provide text for the correct answer in question ${position}.`, 'error');
+      return;
+    }
+  }
+
+  const questionCount = workshopQuestions.length;
+  const templateLabel = workshopTemplateSelect.selectedOptions[0]?.textContent?.trim() ?? templateValue;
+
+  showWorkshopNotice(
+    `Mock submission ready! “${templateLabel}” variant with ${questionCount} question${questionCount > 1 ? 's' : ''} will be reviewed when the Workshop launches.`,
+    'success'
+  );
+
+  workshopTemplateSelect.selectedIndex = 0;
+  workshopNotesInput.value = '';
+  workshopQuestions.length = 0;
+  updateWorkshopFormState();
+});
+
+updateWorkshopFormState();
 
 initialiseMiniGameHost({
   overlay: miniGameOverlay,

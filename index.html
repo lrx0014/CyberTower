@@ -193,43 +193,44 @@
         <section class="workshop-section workshop-summary">
           <h3 class="workshop-section-title">What is the Workshop?</h3>
           <p class="workshop-copy">
-            Submit your own cyber-defense mini-games, scenarios, and puzzle encounters. Here, players can create and publish their own puzzles to the shared Puzzle Pool.
-Other players may encounter these User-Generated Content (UGC) quizzes during Monster Encounters and Arena Battles. We curate the best creations for
-            future tower floors. Highlighted creators earn exclusive equipment and lore features.
+            Build community-driven challenges by extending our official mini-game templates—no code required. Drop in new
+            questions, answers, and explainers, then submit for moderation. Featured authors earn exclusive gear and shout-outs.
           </p>
-          <div class="workshop-status">Status: Under development – content submission unavailable in this demo.</div>
+          <div class="workshop-status">Status: Under development – publishing to live dungeon encounters is disabled.</div>
         </section>
         <section class="workshop-section">
-          <h3 class="workshop-section-title">Featured Community Concepts</h3>
-          <ul class="workshop-list" id="workshop-list">
-            <li class="workshop-card">
-              <h4>SOC Shift Simulator</h4>
-              <p>Rotate through analyst roles to triage phishing, malware, and insider alerts before the shift ends.</p>
-              <span class="workshop-meta">By: TraceRoute · Tagged: Operations, Time Attack</span>
-            </li>
-            <li class="workshop-card">
-              <h4>Passphrase Forge</h4>
-              <p>Craft secure passphrases under pressure while balancing entropy, usability, and corporate policy.</p>
-              <span class="workshop-meta">By: VioletCipher · Tagged: Passwords, Puzzle</span>
-            </li>
-            <li class="workshop-card">
-              <h4>Zero Trust Gauntlet</h4>
-              <p>Design access policies for dynamic rooms; wrong trust decisions spawn adaptive adversaries.</p>
-              <span class="workshop-meta">By: SegmentSeal · Tagged: Strategy, Network</span>
-            </li>
-          </ul>
-        </section>
-        <section class="workshop-section">
-          <h3 class="workshop-section-title">Submission Pipeline</h3>
-          <ol class="workshop-steps">
-            <li><strong>Build</strong> your puzzle with our upcoming sandbox tools.</li>
-            <li><strong>Submit</strong> for moderation and automated security validation.</li>
-            <li><strong>Earn</strong> rewards when your creation is featured in seasonal events.</li>
-          </ol>
-          <button id="workshop-cta" type="button" class="workshop-cta">Stay Updated</button>
-          <div id="workshop-notice" class="workshop-notice hidden" role="alert">
-            Workshop publishing will launch in a future update. Keep an eye on the patch notes!
-          </div>
+          <h3 class="workshop-section-title">Create a Quiz Variant</h3>
+          <form id="workshop-form" class="workshop-form" novalidate>
+            <label class="workshop-field">
+              <span>Choose Template</span>
+              <select id="workshop-template" required>
+                <option value="" disabled selected>Select a gameplay template</option>
+                <option value="phish-net">Phish Net Defender – phishing recognition</option>
+                <option value="quiz-duel">Quiz Duel – cybersecurity trivia</option>
+                <option value="privacy-cleanup">Privacy Cleanup – data hygiene</option>
+                <option value="mfa-mastermind">MFA Mastermind – authentication choices</option>
+              </select>
+            </label>
+            <div class="workshop-hint">
+              Template handles visuals and scoring. You supply the knowledge checks.
+            </div>
+            <div class="workshop-question-builder">
+              <h4>Add Questions</h4>
+              <p class="workshop-copy">
+                Write the prompt, list possible answers, select the correct one, and add an explanation shown after the round.
+              </p>
+              <div id="workshop-questions" class="workshop-questions"></div>
+              <button type="button" id="workshop-add-question" class="workshop-secondary">Add Question</button>
+            </div>
+            <label class="workshop-field">
+              <span>Creator Notes (optional)</span>
+              <textarea id="workshop-notes" rows="3" placeholder="Share any special tuning requests or lore tie-ins."></textarea>
+            </label>
+            <button type="submit" class="workshop-cta">Submit to Moderation (Mock)</button>
+            <div id="workshop-notice" class="workshop-notice hidden" role="alert">
+              Thanks! Submissions are disabled in this build, but your mock pitch has been recorded.
+            </div>
+          </form>
         </section>
       </div>
     </div>
