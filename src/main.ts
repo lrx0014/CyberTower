@@ -11,12 +11,16 @@ import TutorialScene, {
   DEFAULT_GAME_WIDTH,
   debugGrantInventoryItem,
   debugSetPlayerAttributes,
+  getPreferredPlayerName,
   getActiveScene,
   getInventoryEntries,
   getPlayerSnapshot,
+  normalizePlayerNameInput,
   requestDirectionalInput,
   registerUIHooks,
-  resetPlayerState
+  resetPlayerState,
+  setPreferredPlayerName,
+  PLAYER_NAME_MAX_LENGTH
 } from './scenes/TutorialScene';
 import type { DirectionInput } from './scenes/TutorialScene';
 import { PlayerState } from './global/types';
@@ -39,6 +43,10 @@ const journalContent = document.getElementById('journal-content');
 const miniGameOverlay = document.getElementById('minigame-overlay');
 const miniGameFrame = document.getElementById('minigame-frame');
 const miniGameLoading = document.getElementById('minigame-loading');
+const playerNameModal = document.getElementById('player-name-modal');
+const playerNameForm = document.getElementById('player-name-form');
+const playerNameInput = document.getElementById('player-name-input');
+const playerNameError = document.getElementById('player-name-error');
 
 // for debug
 const debugToggle = document.getElementById('debug-toggle');
@@ -72,6 +80,10 @@ if (
   !(miniGameOverlay instanceof HTMLElement) ||
   !(miniGameFrame instanceof HTMLIFrameElement) ||
   !(miniGameLoading instanceof HTMLElement) ||
+  !(playerNameModal instanceof HTMLElement) ||
+  !(playerNameForm instanceof HTMLFormElement) ||
+  !(playerNameInput instanceof HTMLInputElement) ||
+  !(playerNameError instanceof HTMLElement) ||
   !(resetButton instanceof HTMLButtonElement) ||
   !(hintButton instanceof HTMLButtonElement) ||
   !(debugToggle instanceof HTMLButtonElement) ||
@@ -200,11 +212,95 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [TutorialScene, CombatScene]
 };
 
-const game = new Phaser.Game(config);
+let game: Phaser.Game | null = null;
+const handleResize = () => {
+  if (game) {
+    game.scale.refresh();
+  }
+};
 
-window.addEventListener('resize', () => {
-  game.scale.refresh();
+const startGame = () => {
+  if (game) return;
+  game = new Phaser.Game(config);
+  window.addEventListener('resize', handleResize);
+};
+
+const PLAYER_NAME_STORAGE_KEY = 'cybertower.playerName';
+
+const readStoredPlayerName = (): string | null => {
+  try {
+    return window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY);
+  } catch (err) {
+    return null;
+  }
+};
+
+const writeStoredPlayerName = (value: string) => {
+  try {
+    window.localStorage.setItem(PLAYER_NAME_STORAGE_KEY, value);
+  } catch (err) {
+    // ignore storage failures (e.g. disabled storage)
+  }
+};
+
+const hidePlayerNameModal = () => {
+  playerNameModal.classList.add('hidden');
+  playerNameInput.blur();
+};
+
+const showPlayerNameModal = () => {
+  playerNameModal.classList.remove('hidden');
+  window.setTimeout(() => {
+    playerNameInput.focus();
+    playerNameInput.select();
+  }, 0);
+};
+
+playerNameInput.maxLength = PLAYER_NAME_MAX_LENGTH;
+playerNameInput.placeholder = getPreferredPlayerName();
+
+playerNameInput.addEventListener('input', () => {
+  if (!playerNameError.classList.contains('hidden')) {
+    playerNameError.classList.add('hidden');
+  }
 });
+
+playerNameForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const normalized = normalizePlayerNameInput(playerNameInput.value);
+  if (!normalized) {
+    playerNameError.classList.remove('hidden');
+    playerNameInput.focus();
+    return;
+  }
+  const appliedName = setPreferredPlayerName(normalized);
+  nameEl.textContent = appliedName;
+  playerNameInput.value = appliedName;
+  playerNameError.classList.add('hidden');
+  writeStoredPlayerName(appliedName);
+  hidePlayerNameModal();
+  startGame();
+});
+
+const initializePlayerName = () => {
+  const storedName = readStoredPlayerName();
+  const normalizedStored = storedName ? normalizePlayerNameInput(storedName) : null;
+  if (normalizedStored) {
+    const appliedName = setPreferredPlayerName(normalizedStored);
+    nameEl.textContent = appliedName;
+    playerNameInput.value = appliedName;
+    playerNameError.classList.add('hidden');
+    writeStoredPlayerName(appliedName);
+    hidePlayerNameModal();
+    startGame();
+    return;
+  }
+  playerNameInput.value = '';
+  playerNameError.classList.add('hidden');
+  showPlayerNameModal();
+};
+
+initializePlayerName();
 
 resetButton.addEventListener('click', () => {
   if (resetPlayerState()) {

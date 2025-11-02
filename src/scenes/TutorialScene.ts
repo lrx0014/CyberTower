@@ -6,14 +6,18 @@ export type { DirectionInput } from './BaseTowerScene';
 export {
   DEFAULT_GAME_HEIGHT,
   DEFAULT_GAME_WIDTH,
+  PLAYER_NAME_MAX_LENGTH,
   debugGrantInventoryItem,
   debugSetPlayerAttributes,
+  getPreferredPlayerName,
   getActiveScene,
   getInventoryEntries,
   getPlayerSnapshot,
+  normalizePlayerNameInput,
   requestDirectionalInput,
   registerUIHooks,
-  resetPlayerState
+  resetPlayerState,
+  setPreferredPlayerName
 } from './BaseTowerScene';
 
 const TUTORIAL_SCENE_CONFIG: TowerSceneConfig = {

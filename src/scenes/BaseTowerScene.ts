@@ -24,7 +24,11 @@ let ROWS = 0;
 let state: PlayerState | null = null;
 let map: TileType[][] | null = null;
 let spawn: { x: number; y: number } = { x: 0, y: 0 };
-let playerName = 'Traveler';
+const DEFAULT_PLAYER_NAME = 'Traveler';
+const MAX_PLAYER_NAME_LENGTH = 20;
+export const PLAYER_NAME_MAX_LENGTH = MAX_PLAYER_NAME_LENGTH;
+let playerName = DEFAULT_PLAYER_NAME;
+let preferredPlayerName: string | null = null;
 
 const monsterData = new Map<TileKey, MonsterStats>();
 const itemData = new Map<TileKey, ItemData>();
@@ -36,6 +40,14 @@ const stairsData = new Map<TileKey, { direction: 'up' | 'down' }>();
 
 type Facing = 'up' | 'down' | 'left' | 'right';
 
+const sanitizePlayerName = (value: string | null | undefined): string | null => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const normalized = trimmed.replace(/\s+/g, ' ');
+  const clipped = normalized.slice(0, MAX_PLAYER_NAME_LENGTH);
+  return clipped.length > 0 ? clipped : null;
+};
 
 let playerFrames: Record<Facing, number[]> = {
   up: [],
@@ -197,6 +209,25 @@ export function getActiveScene(): BaseTowerScene | null {
 }
 
 export type DirectionInput = 'up' | 'down' | 'left' | 'right';
+
+export function setPreferredPlayerName(name: string): string {
+  const sanitized = sanitizePlayerName(name) ?? DEFAULT_PLAYER_NAME;
+  preferredPlayerName = sanitized;
+  playerName = sanitized;
+  if (state) {
+    state.name = playerName;
+    updateUI();
+  }
+  return playerName;
+}
+
+export function getPreferredPlayerName(): string {
+  return preferredPlayerName ?? playerName;
+}
+
+export function normalizePlayerNameInput(name: string): string | null {
+  return sanitizePlayerName(name);
+}
 
 export function requestDirectionalInput(direction: DirectionInput) {
   if (!direction) return;
@@ -478,7 +509,7 @@ export class BaseTowerScene extends Phaser.Scene {
     storyTriggers.clear();
     stairsData.clear();
     seedItemCatalogFromTiles(tm);
-    playerName = 'Hero';
+    playerName = preferredPlayerName ?? 'Hero';
 
     if (this.wallsLayer) {
       for (let y = 0; y < ROWS; y += 1) {
@@ -627,7 +658,11 @@ export class BaseTowerScene extends Phaser.Scene {
     switch (kind) {
       case 'player':
         spawn = { x: gx, y: gy };
-        playerName = (props.charName as string) || displayName || 'Traveler';
+        {
+          const mapDefinedName =
+            sanitizePlayerName((props.charName as string) || displayName) ?? DEFAULT_PLAYER_NAME;
+          playerName = preferredPlayerName ?? mapDefinedName;
+        }
         break;
       case 'door':
         map![gy][gx] = TileType.DOOR;
