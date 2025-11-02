@@ -8,6 +8,7 @@ import { StoryNodeEvent } from '../story/storyTypes';
 import { DoorData, ItemData, MonsterStats, PlayerState, TileKey, TileType, UIHooks } from '../global/types';
 import { BattleContext, BattleResult } from '../battle/types';
 import { launchMiniGame, selectMiniGame } from '../battle/miniGameManager';
+import { computeEquipmentBonusTotals } from '../global/equipment';
 
 export const DEFAULT_GAME_WIDTH = 48 * 15 + 24;
 export const DEFAULT_GAME_HEIGHT = 48 * 15 + 24;
@@ -250,7 +251,8 @@ function postMsg(text: string) {
 
 function updateUI() {
   if (!state) return;
-  uiHooks?.updateStats(state);
+  const derivedState = applyEquipmentBonuses(state);
+  uiHooks?.updateStats(derivedState);
 }
 
 function registerItemDefinition(gid: string, name?: string) {
@@ -393,8 +395,11 @@ const parseTileKey = (key: TileKey): { x: number; y: number } => {
 
 function battleCalc(monster: MonsterStats) {
   if (!state) throw new Error('Player state is not initialised.');
-  const playerDamage = Math.max(0, state.atk - monster.def);
-  const monsterDamage = Math.max(0, monster.atk - state.def);
+  const bonuses = computeEquipmentBonusTotals(state.inventory);
+  const playerAtk = Math.max(0, state.atk + bonuses.bonusAtk);
+  const playerDef = Math.max(0, state.def + bonuses.bonusDef);
+  const playerDamage = Math.max(0, playerAtk - monster.def);
+  const monsterDamage = Math.max(0, monster.atk - playerDef);
   if (playerDamage <= 0) return { canWin: false, hpLoss: Infinity, rounds: 0 };
   const rounds = Math.ceil(monster.hp / playerDamage);
   const hpLoss = Math.max(0, (rounds - 1) * monsterDamage);
@@ -1142,6 +1147,9 @@ export class BaseTowerScene extends Phaser.Scene {
     const selectedMiniGame =
       selectMiniGame(monster.battleMiniGameId) ?? selectMiniGame(this.defaultMiniGameId);
     const miniGameId = selectedMiniGame?.id ?? this.defaultMiniGameId;
+    const bonuses = computeEquipmentBonusTotals(state.inventory);
+    const effectiveAtk = Math.max(0, state.atk + bonuses.bonusAtk);
+    const effectiveDef = Math.max(0, state.def + bonuses.bonusDef);
 
     return {
       id: `${this.scene.key}:${tileKey}:${Date.now()}`,
@@ -1149,7 +1157,7 @@ export class BaseTowerScene extends Phaser.Scene {
       sceneName: this.displayName,
       player: {
         name: state.name,
-        stats: { hp: state.hp, atk: state.atk, def: state.def },
+        stats: { hp: state.hp, atk: effectiveAtk, def: effectiveDef },
         inventory: { ...state.inventory },
         keys: state.keys
       },
@@ -1301,3 +1309,11 @@ export class BaseTowerScene extends Phaser.Scene {
     });
   }
 }
+const applyEquipmentBonuses = (player: PlayerState): PlayerState => {
+  const bonuses = computeEquipmentBonusTotals(player.inventory);
+  return {
+    ...player,
+    atk: Math.max(0, player.atk + bonuses.bonusAtk),
+    def: Math.max(0, player.def + bonuses.bonusDef)
+  };
+};

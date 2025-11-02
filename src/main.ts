@@ -185,7 +185,7 @@ const renderInventory = (state: PlayerState) => {
     const nameSpan = document.createElement('span');
     nameSpan.textContent = entry.name;
     const valueSpan = document.createElement('span');
-    valueSpan.textContent = `${entry.count}`;
+    valueSpan.textContent = `x${entry.count}`;
     row.appendChild(nameSpan);
     row.appendChild(valueSpan);
     inventoryList.appendChild(row);

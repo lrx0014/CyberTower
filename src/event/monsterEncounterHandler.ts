@@ -2,6 +2,7 @@ import { TileType } from '../global/types';
 import type { BattleResult } from '../battle/types';
 import { GameEventHandler } from './bus/eventBus';
 import { TowerEventContext, TowerEventHelpers } from './context';
+import { pickRandomEquipmentReward } from '../global/equipment';
 
 export const createMonsterEncounterHandler = (
   ctx: TowerEventContext,
@@ -130,8 +131,12 @@ export const createMonsterEncounterHandler = (
     ctx.removeObjectTile(position);
     ctx.removeMonsterLabel(tileKey);
 
-    const successMsg =
-      trimmedMessage ?? `You defeated ${monster.name || 'the monster'}!`;
+    const reward = pickRandomEquipmentReward();
+    ctx.addInventoryItem(reward.gid, 1, reward.name);
+    ctx.updateUI();
+
+    let successMsg = trimmedMessage ?? `You defeated ${monster.name || 'the monster'}!`;
+    successMsg = `${successMsg} You obtained ${reward.name}!`;
     ctx.postMsg(successMsg);
 
     const from = helpers.fallbackFrom();
