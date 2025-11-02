@@ -31,6 +31,7 @@ interface ActiveMiniGameSession {
 const registry = new Map<string, MiniGameDescriptor>();
 let host: MiniGameHostElements | null = null;
 let activeSession: ActiveMiniGameSession | null = null;
+let nextMiniGameIndex = 0;
 
 export const DEFAULT_MINI_GAME_ID = 'quiz';
 
@@ -48,6 +49,7 @@ export function registerMiniGames(descriptors: MiniGameDescriptor[]) {
 export function setMiniGames(descriptors: MiniGameDescriptor[]) {
   registry.clear();
   registerMiniGames(descriptors);
+  nextMiniGameIndex = 0;
 }
 
 export function getRegisteredMiniGames(): MiniGameDescriptor[] {
@@ -68,8 +70,9 @@ export function selectMiniGame(preferredId?: string): MiniGameDescriptor | undef
   if (all.length === 0) {
     return undefined;
   }
-  const randomIndex = Math.floor(Math.random() * all.length);
-  return all[randomIndex];
+  const index = nextMiniGameIndex % all.length;
+  nextMiniGameIndex = (nextMiniGameIndex + 1) % all.length;
+  return all[index];
 }
 
 export async function loadMiniGamesFromManifest(indexUrl = '/mini-games/loader.json') {

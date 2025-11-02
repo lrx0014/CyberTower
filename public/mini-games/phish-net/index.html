@@ -174,7 +174,7 @@
         y: HEIGHT - 80,
         width: NET_WIDTH,
         height: NET_HEIGHT,
-        speed: 6
+        speed: 10
       };
 
       const keys = new Set();
@@ -198,7 +198,7 @@
 
       function makeEnvelope(type) {
         const isPhish = type === 'phish';
-        const speed = Math.random() * 1.5 + 1.2;
+        const speed = Math.random() * 1.0 + 0.45;
         const trait = isPhish
           ? phishTraits[Math.floor(Math.random() * phishTraits.length)]
           : legitimacyTraits[Math.floor(Math.random() * legitimacyTraits.length)];
@@ -219,7 +219,7 @@
       let wave = 1;
       const maxWaves = 3;
       let spawnTimer = 0;
-      let spawnInterval = 90;
+      let spawnInterval = 110;
       let integrity = 100;
       let phishCaught = 0;
       let falseFlags = 0;
@@ -267,7 +267,7 @@
           y: player.y,
           width: 8,
           height: 18,
-          speed: 7
+          speed: 12
         });
       }
 
@@ -331,7 +331,7 @@
         if (spawnedThisWave >= target && envelopes.length === 0) {
           wave += 1;
           spawnedThisWave = 0;
-          spawnInterval = Math.max(55, spawnInterval - 8);
+          spawnInterval = Math.max(75, spawnInterval - 8);
           spawnTimer = 0;
           updateHud();
         }
