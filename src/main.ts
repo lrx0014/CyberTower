@@ -599,6 +599,28 @@ initialiseMiniGameHost({
   loading: miniGameLoading
 });
 
+const suppressGameInput = (event: KeyboardEvent) => {
+  switch (event.code) {
+    case 'KeyW':
+    case 'KeyA':
+    case 'KeyS':
+    case 'KeyD':
+    case 'ArrowUp':
+    case 'ArrowDown':
+    case 'ArrowLeft':
+    case 'ArrowRight':
+      event.preventDefault();
+      event.stopPropagation();
+      break;
+    default:
+      break;
+  }
+};
+
+if (miniGameOverlay) {
+  miniGameOverlay.addEventListener('keydown', suppressGameInput, true);
+}
+
 const fallbackMiniGame = {
   id: 'quiz',
   name: 'Cybersecurity Quiz Duel',
