@@ -21,7 +21,7 @@
         <div class="panel-controls">
           <button id="journal-open" type="button">Traveler Journal</button>
           <button id="arena-open" type="button">Arena</button>
-          <button id="workshop-open" type="button" disabled>Workshop</button>
+          <button id="workshop-open" type="button">Workshop</button>
         </div>
       </div>
 
@@ -150,7 +150,7 @@
     <div class="arena-dialog">
       <div class="arena-header">
         <div class="arena-title-group">
-          <span id="arena-title">Cyber Arena</span>
+          <span id="arena-title">Cyber Arena (Mock)</span>
           <span id="arena-season" class="arena-season"></span>
         </div>
         <button id="arena-close" type="button" aria-label="Close arena view">×</button>
@@ -169,6 +169,67 @@
         <section class="arena-section">
           <h3 class="arena-section-title">Weekly Rankings</h3>
           <ul id="arena-leaderboard" class="arena-leaderboard" aria-label="Weekly arena rankings"></ul>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div
+    id="workshop-modal"
+    class="workshop-modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="workshop-title"
+    tabindex="-1"
+  >
+    <div class="workshop-dialog">
+      <div class="workshop-header">
+        <div class="workshop-title-group">
+          <span id="workshop-title">Creator Workshop (Mock)</span>
+          <span class="workshop-subtitle">Build and share cyber puzzles with the community.</span>
+        </div>
+        <button id="workshop-close" type="button" aria-label="Close workshop view">×</button>
+      </div>
+      <div class="workshop-body">
+        <section class="workshop-section workshop-summary">
+          <h3 class="workshop-section-title">What is the Workshop?</h3>
+          <p class="workshop-copy">
+            Submit your own cyber-defense mini-games, scenarios, and puzzle encounters. Here, players can create and publish their own puzzles to the shared Puzzle Pool.
+Other players may encounter these User-Generated Content (UGC) quizzes during Monster Encounters and Arena Battles. We curate the best creations for
+            future tower floors. Highlighted creators earn exclusive equipment and lore features.
+          </p>
+          <div class="workshop-status">Status: Under development – content submission unavailable in this demo.</div>
+        </section>
+        <section class="workshop-section">
+          <h3 class="workshop-section-title">Featured Community Concepts</h3>
+          <ul class="workshop-list" id="workshop-list">
+            <li class="workshop-card">
+              <h4>SOC Shift Simulator</h4>
+              <p>Rotate through analyst roles to triage phishing, malware, and insider alerts before the shift ends.</p>
+              <span class="workshop-meta">By: TraceRoute · Tagged: Operations, Time Attack</span>
+            </li>
+            <li class="workshop-card">
+              <h4>Passphrase Forge</h4>
+              <p>Craft secure passphrases under pressure while balancing entropy, usability, and corporate policy.</p>
+              <span class="workshop-meta">By: VioletCipher · Tagged: Passwords, Puzzle</span>
+            </li>
+            <li class="workshop-card">
+              <h4>Zero Trust Gauntlet</h4>
+              <p>Design access policies for dynamic rooms; wrong trust decisions spawn adaptive adversaries.</p>
+              <span class="workshop-meta">By: SegmentSeal · Tagged: Strategy, Network</span>
+            </li>
+          </ul>
+        </section>
+        <section class="workshop-section">
+          <h3 class="workshop-section-title">Submission Pipeline</h3>
+          <ol class="workshop-steps">
+            <li><strong>Build</strong> your puzzle with our upcoming sandbox tools.</li>
+            <li><strong>Submit</strong> for moderation and automated security validation.</li>
+            <li><strong>Earn</strong> rewards when your creation is featured in seasonal events.</li>
+          </ol>
+          <button id="workshop-cta" type="button" class="workshop-cta">Stay Updated</button>
+          <div id="workshop-notice" class="workshop-notice hidden" role="alert">
+            Workshop publishing will launch in a future update. Keep an eye on the patch notes!
+          </div>
         </section>
       </div>
     </div>

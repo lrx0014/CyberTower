@@ -47,6 +47,11 @@ const arenaSeasonLabel = document.getElementById('arena-season');
 const arenaLeaderboardList = document.getElementById('arena-leaderboard');
 const arenaFindMatchButton = document.getElementById('arena-find-match');
 const arenaNotice = document.getElementById('arena-notice');
+const workshopOpenButton = document.getElementById('workshop-open');
+const workshopModal = document.getElementById('workshop-modal');
+const workshopCloseButton = document.getElementById('workshop-close');
+const workshopNotice = document.getElementById('workshop-notice');
+const workshopCta = document.getElementById('workshop-cta');
 const miniGameOverlay = document.getElementById('minigame-overlay');
 const miniGameFrame = document.getElementById('minigame-frame');
 const miniGameLoading = document.getElementById('minigame-loading');
@@ -91,6 +96,11 @@ if (
   !(arenaLeaderboardList instanceof HTMLElement) ||
   !(arenaFindMatchButton instanceof HTMLButtonElement) ||
   !(arenaNotice instanceof HTMLElement) ||
+  !(workshopOpenButton instanceof HTMLButtonElement) ||
+  !(workshopModal instanceof HTMLElement) ||
+  !(workshopCloseButton instanceof HTMLButtonElement) ||
+  !(workshopNotice instanceof HTMLElement) ||
+  !(workshopCta instanceof HTMLButtonElement) ||
   !(miniGameOverlay instanceof HTMLElement) ||
   !(miniGameFrame instanceof HTMLIFrameElement) ||
   !(miniGameLoading instanceof HTMLElement) ||
@@ -188,6 +198,7 @@ const renderArenaLeaderboard = () => {
 };
 
 let arenaKeyHandler: ((event: KeyboardEvent) => void) | null = null;
+let workshopKeyHandler: ((event: KeyboardEvent) => void) | null = null;
 
 const closeArenaModal = () => {
   if (arenaModal.classList.contains('hidden')) return;
@@ -232,6 +243,49 @@ arenaFindMatchButton.addEventListener('click', () => {
   arenaNotice.textContent =
     'Matchmaking is still under development. Arena battles are not available in this demo build.';
   arenaNotice.classList.remove('hidden');
+});
+
+const closeWorkshopModal = () => {
+  if (workshopModal.classList.contains('hidden')) return;
+  workshopModal.classList.add('hidden');
+  if (workshopKeyHandler) {
+    window.removeEventListener('keydown', workshopKeyHandler);
+    workshopKeyHandler = null;
+  }
+  workshopOpenButton.focus();
+};
+
+const openWorkshopModal = () => {
+  workshopNotice.classList.add('hidden');
+  workshopModal.classList.remove('hidden');
+  workshopModal.focus({ preventScroll: true });
+  workshopKeyHandler = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeWorkshopModal();
+    }
+  };
+  window.addEventListener('keydown', workshopKeyHandler);
+};
+
+workshopOpenButton.addEventListener('click', () => {
+  openWorkshopModal();
+});
+
+workshopCloseButton.addEventListener('click', () => {
+  closeWorkshopModal();
+});
+
+workshopModal.addEventListener('click', (event) => {
+  if (event.target === workshopModal) {
+    closeWorkshopModal();
+  }
+});
+
+workshopCta.addEventListener('click', () => {
+  workshopNotice.textContent =
+    'Creator submissions are coming soon. Subscribe to updates in the full release.';
+  workshopNotice.classList.remove('hidden');
 });
 
 initialiseMiniGameHost({
