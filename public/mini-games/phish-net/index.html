@@ -31,6 +31,8 @@
         color: #a8b6d9;
         text-transform: uppercase;
         letter-spacing: 0.04em;
+        z-index: 2;
+        pointer-events: none;
       }
 
       .container {
@@ -368,7 +370,7 @@
           ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
           ctx.fillRect(env.x - env.width / 2, env.y - env.height / 2, env.width, env.height / 2);
 
-          ctx.fillStyle = '#111826';
+          ctx.fillStyle = '#f4f8ff';
           ctx.font = '12px Inter, sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(env.trait, env.x, env.y + env.height);
