@@ -20,7 +20,7 @@
         <div class="stat"><span>HP</span><span id="hp">-</span></div>
         <div class="panel-controls">
           <button id="journal-open" type="button">Traveler Journal</button>
-          <button id="arena-open" type="button" disabled>Arena</button>
+          <button id="arena-open" type="button">Arena</button>
           <button id="workshop-open" type="button" disabled>Workshop</button>
         </div>
       </div>
@@ -136,6 +136,40 @@
       <div class="journal-body">
         <nav id="journal-nav" class="journal-nav"></nav>
         <div id="journal-content" class="journal-content"></div>
+      </div>
+    </div>
+  </div>
+  <div
+    id="arena-modal"
+    class="arena-modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="arena-title"
+    tabindex="-1"
+  >
+    <div class="arena-dialog">
+      <div class="arena-header">
+        <div class="arena-title-group">
+          <span id="arena-title">Cyber Arena</span>
+          <span id="arena-season" class="arena-season"></span>
+        </div>
+        <button id="arena-close" type="button" aria-label="Close arena view">×</button>
+      </div>
+      <div class="arena-body">
+        <section class="arena-section">
+          <h3 class="arena-section-title">Matchmaking</h3>
+          <p class="arena-copy">
+            Challenge other defenders to climb the leaderboard. Each match awards arena points based on performance.
+          </p>
+          <button id="arena-find-match" type="button" class="arena-find-button">Find Match</button>
+          <div id="arena-notice" class="arena-notice hidden" role="alert">
+            This feature is still under construction. Arena battles are not available in this demo build.
+          </div>
+        </section>
+        <section class="arena-section">
+          <h3 class="arena-section-title">Weekly Rankings</h3>
+          <ul id="arena-leaderboard" class="arena-leaderboard" aria-label="Weekly arena rankings"></ul>
+        </section>
       </div>
     </div>
   </div>

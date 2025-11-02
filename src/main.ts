@@ -40,6 +40,13 @@ const journalModal = document.getElementById('journal-modal');
 const journalCloseButton = document.getElementById('journal-close');
 const journalNav = document.getElementById('journal-nav');
 const journalContent = document.getElementById('journal-content');
+const arenaOpenButton = document.getElementById('arena-open');
+const arenaModal = document.getElementById('arena-modal');
+const arenaCloseButton = document.getElementById('arena-close');
+const arenaSeasonLabel = document.getElementById('arena-season');
+const arenaLeaderboardList = document.getElementById('arena-leaderboard');
+const arenaFindMatchButton = document.getElementById('arena-find-match');
+const arenaNotice = document.getElementById('arena-notice');
 const miniGameOverlay = document.getElementById('minigame-overlay');
 const miniGameFrame = document.getElementById('minigame-frame');
 const miniGameLoading = document.getElementById('minigame-loading');
@@ -77,6 +84,13 @@ if (
   !(journalCloseButton instanceof HTMLButtonElement) ||
   !(journalNav instanceof HTMLElement) ||
   !(journalContent instanceof HTMLElement) ||
+  !(arenaOpenButton instanceof HTMLButtonElement) ||
+  !(arenaModal instanceof HTMLElement) ||
+  !(arenaCloseButton instanceof HTMLButtonElement) ||
+  !(arenaSeasonLabel instanceof HTMLElement) ||
+  !(arenaLeaderboardList instanceof HTMLElement) ||
+  !(arenaFindMatchButton instanceof HTMLButtonElement) ||
+  !(arenaNotice instanceof HTMLElement) ||
   !(miniGameOverlay instanceof HTMLElement) ||
   !(miniGameFrame instanceof HTMLIFrameElement) ||
   !(miniGameLoading instanceof HTMLElement) ||
@@ -113,6 +127,111 @@ initialiseJournalUI({
   modal: journalModal,
   list: journalNav,
   content: journalContent
+});
+
+type ArenaLeaderboardEntry = {
+  name: string;
+  rating: number;
+  wins: number;
+  losses: number;
+};
+
+const arenaLeaderboardData: ArenaLeaderboardEntry[] = [
+  { name: 'CipherBlade', rating: 2487, wins: 12, losses: 3 },
+  { name: 'ZeroDay Sage', rating: 2314, wins: 11, losses: 4 },
+  { name: 'Firewall Fox', rating: 2280, wins: 10, losses: 5 },
+  { name: 'Packet Punch', rating: 2196, wins: 9, losses: 6 },
+  { name: 'GhostRider', rating: 2142, wins: 8, losses: 7 },
+  { name: 'CryptoSentinel', rating: 2088, wins: 8, losses: 7 }
+];
+
+const arenaRatingFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+
+const computeWeekRangeLabel = () => {
+  const now = new Date();
+  const day = now.getDay(); // Sun = 0, Mon = 1
+  const offsetToMonday = day === 0 ? -6 : 1 - day;
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() + offsetToMonday);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const formatter = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+  return `Season Week: ${formatter.format(start)} – ${formatter.format(end)}`;
+};
+
+const renderArenaLeaderboard = () => {
+  arenaLeaderboardList.innerHTML = '';
+  arenaLeaderboardData.forEach((entry, index) => {
+    const item = document.createElement('li');
+    item.className = 'arena-leaderboard-item';
+
+    const rank = document.createElement('span');
+    rank.className = 'arena-leaderboard-rank';
+    rank.textContent = `#${index + 1}`;
+
+    const name = document.createElement('span');
+    name.className = 'arena-leaderboard-name';
+    name.textContent = entry.name;
+
+    const rating = document.createElement('span');
+    rating.className = 'arena-leaderboard-rating';
+    rating.textContent = `${arenaRatingFormatter.format(entry.rating)} RP`;
+
+    const record = document.createElement('span');
+    record.className = 'arena-leaderboard-record';
+    record.textContent = `${entry.wins}-${entry.losses}`;
+
+    item.append(rank, name, rating, record);
+    arenaLeaderboardList.appendChild(item);
+  });
+};
+
+let arenaKeyHandler: ((event: KeyboardEvent) => void) | null = null;
+
+const closeArenaModal = () => {
+  if (arenaModal.classList.contains('hidden')) return;
+  arenaModal.classList.add('hidden');
+  if (arenaKeyHandler) {
+    window.removeEventListener('keydown', arenaKeyHandler);
+    arenaKeyHandler = null;
+  }
+  arenaOpenButton.focus();
+};
+
+const openArenaModal = () => {
+  arenaNotice.classList.add('hidden');
+  arenaSeasonLabel.textContent = computeWeekRangeLabel();
+  renderArenaLeaderboard();
+  arenaModal.classList.remove('hidden');
+  arenaModal.focus({ preventScroll: true });
+  arenaKeyHandler = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeArenaModal();
+    }
+  };
+  window.addEventListener('keydown', arenaKeyHandler);
+};
+
+arenaOpenButton.addEventListener('click', () => {
+  openArenaModal();
+});
+
+arenaCloseButton.addEventListener('click', () => {
+  closeArenaModal();
+});
+
+arenaModal.addEventListener('click', (event) => {
+  if (event.target === arenaModal) {
+    closeArenaModal();
+  }
+});
+
+arenaFindMatchButton.addEventListener('click', () => {
+  arenaNotice.textContent =
+    'Matchmaking is still under development. Arena battles are not available in this demo build.';
+  arenaNotice.classList.remove('hidden');
 });
 
 initialiseMiniGameHost({
