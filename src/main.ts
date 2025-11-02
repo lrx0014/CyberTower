@@ -3,7 +3,8 @@ import {
   initialiseMiniGameHost,
   registerMiniGames,
   loadMiniGamesFromManifest,
-  setMiniGames
+  setMiniGames,
+  cancelActiveMiniGame
 } from './battle/miniGameManager';
 import CombatScene from './scenes/CombatScene';
 import TutorialScene, {
@@ -12,13 +13,12 @@ import TutorialScene, {
   debugGrantInventoryItem,
   debugSetPlayerAttributes,
   getPreferredPlayerName,
-  getActiveScene,
   getInventoryEntries,
   getPlayerSnapshot,
   normalizePlayerNameInput,
   requestDirectionalInput,
   registerUIHooks,
-  resetPlayerState,
+  resetTowerRuntime,
   setPreferredPlayerName,
   PLAYER_NAME_MAX_LENGTH
 } from './scenes/TutorialScene';
@@ -225,6 +225,13 @@ const startGame = () => {
   window.addEventListener('resize', handleResize);
 };
 
+const destroyGameInstance = () => {
+  if (!game) return;
+  game.destroy(true);
+  game = null;
+  window.removeEventListener('resize', handleResize);
+};
+
 const PLAYER_NAME_STORAGE_KEY = 'cybertower.playerName';
 
 const readStoredPlayerName = (): string | null => {
@@ -240,6 +247,14 @@ const writeStoredPlayerName = (value: string) => {
     window.localStorage.setItem(PLAYER_NAME_STORAGE_KEY, value);
   } catch (err) {
     // ignore storage failures (e.g. disabled storage)
+  }
+};
+
+const removeStoredPlayerName = () => {
+  try {
+    window.localStorage.removeItem(PLAYER_NAME_STORAGE_KEY);
+  } catch (err) {
+    // ignore storage failures
   }
 };
 
@@ -300,14 +315,40 @@ const initializePlayerName = () => {
   showPlayerNameModal();
 };
 
+const performFullRestart = () => {
+  cancelActiveMiniGame(new Error('Restarting game.'));
+  destroyGameInstance();
+  CombatScene.resetSnapshots();
+  TutorialScene.resetSnapshots();
+  resetTowerRuntime();
+  removeStoredPlayerName();
+  if (!debugPanel.classList.contains('hidden')) {
+    debugPanel.classList.add('hidden');
+  }
+  const defaultState: PlayerState = {
+    name: '',
+    px: 0,
+    py: 0,
+    hp: 0,
+    atk: 0,
+    def: 0,
+    keys: 0,
+    inventory: {}
+  };
+  postMessage('Game reset. Enter your name to begin.');
+  updateLevelName('—');
+  updateStats(defaultState);
+  playerNameInput.value = '';
+  playerNameError.classList.add('hidden');
+  playerNameInput.placeholder = getPreferredPlayerName();
+  hidePlayerNameModal();
+  initializePlayerName();
+};
+
 initializePlayerName();
 
 resetButton.addEventListener('click', () => {
-  if (resetPlayerState()) {
-    const scene = getActiveScene();
-    scene?.renderPlayer();
-    scene?.centerOnPlayer();
-  }
+  performFullRestart();
 });
 
 hintButton.addEventListener('click', () => {

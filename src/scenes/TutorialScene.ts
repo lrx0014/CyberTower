@@ -17,6 +17,7 @@ export {
   requestDirectionalInput,
   registerUIHooks,
   resetPlayerState,
+  resetTowerRuntime,
   setPreferredPlayerName
 } from './BaseTowerScene';
 
@@ -33,6 +34,10 @@ export default class TutorialScene extends BaseTowerScene {
 
   constructor() {
     super(TUTORIAL_SCENE_CONFIG);
+  }
+
+  public static resetSnapshots(): void {
+    TutorialScene.snapshot = null;
   }
 
   init(): void {

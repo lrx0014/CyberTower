@@ -245,6 +245,35 @@ export function resetPlayerState(): boolean {
   return true;
 }
 
+export function resetTowerRuntime() {
+  state = null;
+  map = null;
+  spawn = { x: 0, y: 0 };
+  monsterData.clear();
+  itemData.clear();
+  doorData.clear();
+  itemCatalog.clear();
+  doorUnlockers.clear();
+  storyTriggers.clear();
+  stairsData.clear();
+  preferredPlayerName = null;
+  playerName = DEFAULT_PLAYER_NAME;
+  playerFrames = {
+    up: [],
+    down: [],
+    left: [],
+    right: []
+  };
+  defaultPlayerFrame = 0;
+  playerFacing = 'down';
+  playerAnimStep = 0;
+  playerCurrentFrame = 0;
+  activeScene = null;
+  resetPlayerAnimationState();
+  gameEventBus.stop();
+  void storyManager.end();
+}
+
 function postMsg(text: string) {
   uiHooks?.postMessage(text);
 }

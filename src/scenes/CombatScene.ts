@@ -24,6 +24,10 @@ export default class CombatScene extends BaseTowerScene {
     super(COMBAT_SCENE_CONFIG);
   }
 
+  public static resetSnapshots(): void {
+    CombatScene.floorSnapshots.clear();
+  }
+
   init(data?: CombatSceneData) {
     if (data?.reset) {
       CombatScene.floorSnapshots.clear();
