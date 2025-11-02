@@ -270,7 +270,7 @@ const addWorkshopOptionToQuestion = (questionId: string) => {
   const question = workshopQuestions.find((item) => item.id === questionId);
   if (!question) return;
   if (question.options.length >= MAX_WORKSHOP_OPTIONS) {
-    showWorkshopNotice(`Each question can have up to ${MAX_WORKSHOP_OPTIONS} answer choices.`, 'error');
+    showWorkshopNotice(`Each question can have up to ${MAX_WORKSHOP_OPTIONS} answer options.`, 'error');
     return;
   }
   question.options.push(createWorkshopOption());
@@ -280,7 +280,7 @@ const removeWorkshopOptionFromQuestion = (questionId: string, optionId: string) 
   const question = workshopQuestions.find((item) => item.id === questionId);
   if (!question) return;
   if (question.options.length <= MIN_WORKSHOP_OPTIONS) {
-    showWorkshopNotice(`Each question needs at least ${MIN_WORKSHOP_OPTIONS} answer choices.`, 'error');
+    showWorkshopNotice(`Each question needs at least ${MIN_WORKSHOP_OPTIONS} answer options.`, 'error');
     return;
   }
   const index = question.options.findIndex((option) => option.id === optionId);
@@ -299,7 +299,7 @@ const renderWorkshopQuestions = () => {
   if (!templateSelected) {
     const placeholder = document.createElement('div');
     placeholder.className = 'workshop-empty';
-    placeholder.textContent = 'Select a gameplay template to start crafting new questions.';
+    placeholder.textContent = 'Pick a game style to start building new questions.';
     workshopQuestionsContainer.appendChild(placeholder);
     return;
   }
@@ -307,7 +307,7 @@ const renderWorkshopQuestions = () => {
   if (workshopQuestions.length === 0) {
     const placeholder = document.createElement('div');
     placeholder.className = 'workshop-empty';
-    placeholder.textContent = 'No questions added yet. Use “Add Question” to begin.';
+    placeholder.textContent = 'No questions yet. Press “Add Question” to begin.';
     workshopQuestionsContainer.appendChild(placeholder);
     return;
   }
@@ -335,9 +335,9 @@ const renderWorkshopQuestions = () => {
     const promptField = document.createElement('label');
     promptField.className = 'workshop-field';
     const promptLabel = document.createElement('span');
-    promptLabel.textContent = 'Question Prompt';
+    promptLabel.textContent = 'Question Text';
     const promptTextarea = document.createElement('textarea');
-    promptTextarea.placeholder = 'What is the challenge for the player?';
+    promptTextarea.placeholder = 'What question do you want to add?';
     promptTextarea.value = question.prompt;
     promptTextarea.addEventListener('input', () => {
       question.prompt = promptTextarea.value;
@@ -364,7 +364,7 @@ const renderWorkshopQuestions = () => {
 
       const optionInput = document.createElement('input');
       optionInput.type = 'text';
-      optionInput.placeholder = 'Answer choice';
+      optionInput.placeholder = 'Answer option';
       optionInput.value = option.text;
       optionInput.addEventListener('input', () => {
         option.text = optionInput.value;
@@ -379,7 +379,7 @@ const renderWorkshopQuestions = () => {
       removeOptionButton.addEventListener('click', () => {
         if (question.options.length <= MIN_WORKSHOP_OPTIONS) {
           showWorkshopNotice(
-            `Each question needs at least ${MIN_WORKSHOP_OPTIONS} answer choices.`,
+            `Each question needs at least ${MIN_WORKSHOP_OPTIONS} answer options.`,
             'error'
           );
           return;
@@ -397,7 +397,7 @@ const renderWorkshopQuestions = () => {
     const addOptionButton = document.createElement('button');
     addOptionButton.type = 'button';
     addOptionButton.className = 'workshop-tertiary';
-    addOptionButton.textContent = 'Add answer choice';
+    addOptionButton.textContent = 'Add answer option';
     addOptionButton.addEventListener('click', () => {
       addWorkshopOptionToQuestion(question.id);
       renderWorkshopQuestions();
@@ -408,9 +408,9 @@ const renderWorkshopQuestions = () => {
     const explanationField = document.createElement('label');
     explanationField.className = 'workshop-field';
     const explanationLabel = document.createElement('span');
-    explanationLabel.textContent = 'Answer Explanation (optional)';
+    explanationLabel.textContent = 'Why this answer is correct (optional)';
     const explanationTextarea = document.createElement('textarea');
-    explanationTextarea.placeholder = 'Let players know why the correct answer is right.';
+    explanationTextarea.placeholder = 'Tell players why the correct answer is right.';
     explanationTextarea.value = question.explanation;
     explanationTextarea.rows = 2;
     explanationTextarea.addEventListener('input', () => {
@@ -524,7 +524,7 @@ workshopTemplateSelect.addEventListener('change', () => {
 
 workshopAddQuestionButton.addEventListener('click', () => {
   if (!workshopTemplateSelect.value.trim()) {
-    showWorkshopNotice('Choose a gameplay template before adding questions.', 'error');
+    showWorkshopNotice('Pick a game style before adding questions.', 'error');
     workshopTemplateSelect.focus();
     return;
   }
@@ -539,13 +539,13 @@ workshopForm.addEventListener('submit', (event) => {
 
   const templateValue = workshopTemplateSelect.value.trim();
   if (!templateValue) {
-    showWorkshopNotice('Select a gameplay template before submitting.', 'error');
+    showWorkshopNotice('Pick a game style before you send it in.', 'error');
     workshopTemplateSelect.focus();
     return;
   }
 
   if (workshopQuestions.length === 0) {
-    showWorkshopNotice('Add at least one question to your quiz variant.', 'error');
+    showWorkshopNotice('Add at least one question to your quiz version.', 'error');
     return;
   }
 
@@ -563,7 +563,7 @@ workshopForm.addEventListener('submit', (event) => {
     }));
     const filledOptionCount = trimmedOptions.filter((option) => option.text.length > 0).length;
     if (filledOptionCount < MIN_WORKSHOP_OPTIONS) {
-      showWorkshopNotice(`Question ${position} needs at least two filled answer choices.`, 'error');
+      showWorkshopNotice(`Question ${position} needs at least two answer options filled in.`, 'error');
       return;
     }
     if (!question.correctOptionId) {
@@ -581,7 +581,7 @@ workshopForm.addEventListener('submit', (event) => {
   const templateLabel = workshopTemplateSelect.selectedOptions[0]?.textContent?.trim() ?? templateValue;
 
   showWorkshopNotice(
-    `Mock submission ready! “${templateLabel}” variant with ${questionCount} question${questionCount > 1 ? 's' : ''} will be reviewed when the Workshop launches.`,
+    `Mock submission ready! Your “${templateLabel}” quiz with ${questionCount} question${questionCount > 1 ? 's' : ''} will be checked once the Workshop opens.`,
     'success'
   );
 

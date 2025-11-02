@@ -130,9 +130,9 @@
   <body>
     <div class="hud" id="hud">
       <div>Wave <span id="wave">1</span>/3</div>
-      <div>Inbox Integrity <span id="integrity">100%</span></div>
+      <div>Inbox Health <span id="integrity">100%</span></div>
       <div>Phish Caught <span id="caught">0</span></div>
-      <div>False Flags <span id="false-flags">0</span></div>
+      <div>False Alarms <span id="false-flags">0</span></div>
     </div>
 
     <div class="container">
@@ -142,7 +142,7 @@
       </div>
       <div class="overlay" id="overlay">
         <h2>Phish Net Defender</h2>
-        <p id="overlay-text">Identify phishing emails and let legitimate messages through. Use A/D or ←/→ to move. Press W or space to cast your net.</p>
+        <p id="overlay-text">Spot fake emails and let real messages through. Use A/D or ←/→ to move. Press W or space to cast your net.</p>
         <button id="btn-start">Start Mission</button>
       </div>
     </div>
@@ -417,8 +417,8 @@
 
         const summaryLines = [
           `Phish caught: ${phishCaught}/${totalPhish}`,
-          `False flags: ${falseFlags}`,
-          `Inbox integrity: ${Math.round(integrity)}%`,
+          `False alarms: ${falseFlags}`,
+          `Inbox health: ${Math.round(integrity)}%`,
           `Damage dealt: ${monsterDamage}`,
           `Damage taken: ${playerDamage}`
         ];
@@ -538,7 +538,7 @@
             overlayTitle.textContent = 'Phish Net Defender';
           }
           overlayText.textContent = `Monster ${battleContext.monster.name} is launching a phishing campaign.
-Catch malicious emails, let legitimate mail through.
+Catch fake emails, let real mail through.
 Move with ←/→ or A/D. Shoot with space or W.`;
           startBtn.textContent = 'Launch Defense';
           surrenderBtn.disabled = false;

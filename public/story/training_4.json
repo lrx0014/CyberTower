@@ -6,10 +6,10 @@
     {
       "id": "intro",
       "speaker": "Professor Fishbuster",
-      "text": "Ahoy! I'm Professor Fishbuster, master of the Anti-Phish Arts. The Hacker Lord has gone fishing—literally! His phishing e-mails lure unsuspecting victims into cyber doom! Have you heard of phishing?",
+      "text": "Ahoy! I'm Professor Fishbuster, master of the Anti-Phish arts. The Hacker Lord is sending fake emails to reel people in! Have you heard of phishing?",
       "options": [
-        { "text": "No… tell me!", "target": "basics" },
-        { "text": "Yes! I'm a cyber fisherman myself!", "target": "confidence" }
+        { "text": "No, tell me!", "target": "basics" },
+        { "text": "Yes! I'm a cyber fisher myself!", "target": "confidence" }
       ]
     },
 
@@ -26,21 +26,21 @@
     {
       "id": "bad_choice",
       "speaker": "Hacker Lord",
-      "text": "Bwahaha! Your treasure is MINE! You fell for the bait!",
+      "text": "Bwahaha! Your treasure is MINE! You bit the bait!",
       "next": "basics"
     },
 
     {
       "id": "good_choice",
       "speaker": "Professor Fishbuster",
-      "text": "Well done! Free diamonds rarely exist… except in Minecraft. Let me teach you more.",
+      "text": "Well done! Free diamonds rarely exist… except maybe in Minecraft. Let me teach you more.",
       "next": "basics"
     },
 
     {
       "id": "basics",
       "speaker": "Professor Fishbuster",
-      "text": "Phishing is when attackers trick you into revealing secrets—like passwords or chocolate stash locations—by pretending to be someone trustworthy.",
+      "text": "Phishing is when attackers trick you into giving up secrets—like passwords or your candy stash—by pretending to be someone you trust.",
       "next": "signs_intro"
     },
 
@@ -58,14 +58,14 @@
     {
       "id": "links",
       "speaker": "Professor Fishbuster",
-      "text": "Dangerous links lurk beneath harmless words. Always hover to inspect! If the address looks like `paypaI.com` (with a capital i), RUN!",
+      "text": "Sneaky links hide under harmless words. Always hover to check! If the address looks like `paypaI.com` (with a capital i), RUN!",
       "next": "decision1"
     },
 
     {
       "id": "sender",
       "speaker": "Professor Fishbuster",
-      "text": "Check the sender carefully! An email from `security@amaz0n-help.ru` is NOT Amazon—unless Amazon moved.",
+      "text": "Check the sender name! An email from `security@amaz0n-help.ru` is NOT Amazon—unless Amazon moved to .ru.",
       "next": "decision1"
     },
 
@@ -79,7 +79,7 @@
     {
       "id": "decision1",
       "speaker": "Professor Fishbuster",
-      "text": "You receive an email claiming 'Your bank account is locked—verify now!' What do you do?",
+      "text": "You get an email claiming 'Your bank account is locked—verify now!' What do you do?",
       "options": [
         { "text": "Click the link and sign in", "target": "fail" },
         { "text": "Go to the official website to check", "target": "safe" },
@@ -90,28 +90,28 @@
     {
       "id": "fail",
       "speaker": "Hacker Lord",
-      "text": "SLURP—your data is delicious! You just fed me your password! Next time, think twice!",
+      "text": "SLURP—your data is delicious! You just handed me your password! Next time, think twice!",
       "next": "ending_bad"
     },
 
     {
       "id": "safe",
       "speaker": "Professor Fishbuster",
-      "text": "Excellent! Always verify by going directly to the official site or app. The Hacker Lord hates careful people!",
+      "text": "Excellent! Always double-check by going straight to the official site or app. The Hacker Lord hates careful people!",
       "next": "final_quiz"
     },
 
     {
       "id": "safe_ish",
       "speaker": "Professor Fishbuster",
-      "text": "Ignoring is better than clicking, but verifying is BEST. Also… nice pizza.",
+      "text": "Ignoring is better than clicking, but checking is BEST. Also… nice pizza.",
       "next": "final_quiz"
     },
 
     {
       "id": "final_quiz",
       "speaker": "Professor Fishbuster",
-      "text": "Before you go, ONE last test: A friend messages you asking for money, says they lost their phone. What do you do?",
+      "text": "Before you go, one more test: A friend messages you for money and says they lost their phone. What do you do?",
       "options": [
         { "text": "Send money immediately—friendship matters!", "target": "ending_bad" },
         { "text": "Contact them through another channel to confirm", "target": "ending_good" }
@@ -128,7 +128,7 @@
     {
       "id": "ending_bad",
       "speaker": "Hacker Lord",
-      "text": "Muahaha! You got hooked again! Another victim of the Cyber Bay!"
+      "text": "Muahaha! You got hooked again! Another snack for me in Cyber Bay!"
     },
 
     {
@@ -143,7 +143,7 @@
       "events": [
         { "type": "article.unlock", "payload": { "article_id": "phishing" } }
       ],
-      "text": "(a new article <Phishing Learn Guide> is available in your Traveler's journal)"
+      "text": "(A new article <Phishing Learn Guide> is now in your Traveler's journal.)"
     }
   ]
 }

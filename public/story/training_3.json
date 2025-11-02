@@ -6,17 +6,17 @@
     {
       "id": "intro",
       "speaker": "Doctor Privacé",
-      "text": "Bonjour, my friend! I am Doctor Privacé, guardian of secrets! The Hacker Lord is collecting people’s private info to build a giant marketing robot. Do you know what counts as personal data?",
+      "text": "Bonjour, my friend! I'm Doctor Privacé, keeper of secrets. The Hacker Lord is hoarding people’s private info to build a giant ad-making robot. Do you know what counts as personal data?",
       "options": [
         { "text": "Hmm… not really.", "target": "basics" },
-        { "text": "Yes! I’m a privacy ninja.", "target": "confidence" }
+        { "text": "Yes! I'm a privacy ninja.", "target": "confidence" }
       ]
     },
 
     {
       "id": "confidence",
       "speaker": "Doctor Privacé",
-      "text": "Très bien! Quick test: Which of these is personal info?",
+      "text": "Très bien! Quick quiz: Which of these is personal info?",
       "options": [
         { "text": "Your favorite pizza topping", "target": "wrong" },
         { "text": "Your ID number", "target": "right" }
@@ -26,21 +26,21 @@
     {
       "id": "wrong",
       "speaker": "Hacker Lord",
-      "text": "Muahaha! Pepperoni tells me nothing. But your ID? THAT is delicious. You need a lesson!",
+      "text": "Muahaha! Pepperoni tells me nothing. But your ID? That’s priceless. You need a lesson!",
       "next": "basics"
     },
 
     {
       "id": "right",
       "speaker": "Doctor Privacé",
-      "text": "Exactly! Identifying info is private. You have talent, petit fromage!",
+      "text": "Exactly! Info that points to you is private. Nicely done, superstar!",
       "next": "basics"
     },
 
     {
       "id": "basics",
       "speaker": "Doctor Privacé",
-      "text": "Personal data includes info that identifies you: name, phone, email, address, ID, birthday. Even your cat’s name—if it’s your password!",
+      "text": "Personal data means info that identifies you: name, phone, email, address, ID, birthday. Even your pet’s name—if you use it as a password!",
       "next": "how_stolen_intro"
     },
 
@@ -58,28 +58,28 @@
     {
       "id": "surveys",
       "speaker": "Doctor Privacé",
-      "text": "Yes! Sometimes surveys ask too much. 'What is your mother's maiden name?' Pardon? Non merci!",
+      "text": "Yes! Some surveys ask for way too much. 'What is your mother's maiden name?' Pardon? Non merci!",
       "next": "protect_intro"
     },
 
     {
       "id": "social",
       "speaker": "Doctor Privacé",
-      "text": "Oui! Oversharing online helps attackers guess passwords or security questions. Maybe don’t post your address AND your travel plan…",
+      "text": "Oui! Oversharing online helps attackers guess passwords or security answers. Maybe don’t post your address AND your travel plan…",
       "next": "protect_intro"
     },
 
     {
       "id": "wifi",
       "speaker": "Doctor Privacé",
-      "text": "Correct! Public Wi-Fi is like a suspicious free buffet—you never know who’s watching you eat!",
+      "text": "Correct! Public Wi-Fi is like a suspicious free buffet—you never know who’s watching you snack!",
       "next": "protect_intro"
     },
 
     {
       "id": "protect_intro",
       "speaker": "Doctor Privacé",
-      "text": "Now let us learn how to protect your precious data. What would you like to know?",
+      "text": "Now let’s learn how to protect your precious data. What do you want to know?",
       "options": [
         { "text": "What NOT to share online", "target": "not_share" },
         { "text": "How to browse safely", "target": "safe_browsing" },
@@ -90,28 +90,28 @@
     {
       "id": "not_share",
       "speaker": "Doctor Privacé",
-      "text": "Do NOT share ID numbers, address, phone, constant travel updates, or your bank details. Also, don’t post your pet’s name if it’s your password. Bad combo!",
+      "text": "Do NOT share ID numbers, address, phone, travel plans, or bank info. Also, don’t post your pet’s name if it’s your password. Bad combo!",
       "next": "scenario"
     },
 
     {
       "id": "safe_browsing",
       "speaker": "Doctor Privacé",
-      "text": "Use HTTPS sites, VPNs on public Wi-Fi, and avoid pirate sites promising movies plus free sunshine.",
+      "text": "Use websites with HTTPS, use a VPN on public Wi-Fi, and avoid sketchy sites promising free movies plus magic prizes.",
       "next": "scenario"
     },
 
     {
       "id": "permissions",
       "speaker": "Doctor Privacé",
-      "text": "Apps often ask for unnecessary permissions. A wallpaper app wanting your GPS? Suspicious! Say NON!",
+      "text": "Apps often ask for extra permissions. A wallpaper app wanting your GPS? Suspicious! Say NON!",
       "next": "scenario"
     },
 
     {
       "id": "scenario",
       "speaker": "Doctor Privacé",
-      "text": "Scenario: A shopping website asks you for your ID number and home address before checkout. What do you do?",
+      "text": "Scenario: A shopping site asks for your ID number and home address before checkout. What do you do?",
       "options": [
         { "text": "Sure, give them everything!", "target": "bad_end" },
         { "text": "Only provide necessary info and verify the site", "target": "good_path" }
@@ -121,21 +121,21 @@
     {
       "id": "bad_end",
       "speaker": "Hacker Lord",
-      "text": "Delicious! Now I have your info. Next I’ll send you discount emails for items you never asked for! Muahaha!",
+      "text": "Delicious! Now I have your info. Next I’ll spam you with fake discount emails! Muahaha!",
       "next": "bye"
     },
 
     {
       "id": "good_path",
       "speaker": "Doctor Privacé",
-      "text": "Très bon! Always check what data is required and confirm the website’s identity before sharing.",
+      "text": "Très bon! Always check what data is really needed and make sure the website is real before sharing anything.",
       "next": "final_quiz"
     },
 
     {
       "id": "final_quiz",
       "speaker": "Doctor Privacé",
-      "text": "Final test! Which is the BEST way to keep private data safe?",
+      "text": "Final test! What’s the BEST way to keep private data safe?",
       "options": [
         { "text": "Share it only when necessary", "target": "best" },
         { "text": "Hide it under your pillow", "target": "silly" }
@@ -145,21 +145,21 @@
     {
       "id": "silly",
       "speaker": "Doctor Privacé",
-      "text": "Under the pillow?! What if the Hacker Lord is the tooth fairy?!",
+      "text": "Under the pillow?! What if the Hacker Lord is pretending to be the tooth fairy?!",
       "next": "best"
     },
 
     {
       "id": "best",
       "speaker": "Doctor Privacé",
-      "text": "Correct! Be mindful, share only necessary info, and protect it wisely. You are now a Privacy Champion!",
+      "text": "Correct! Be careful, share only what’s needed, and guard it well. You’re now a Privacy Champion!",
       "next": "bye"
     },
 
     {
       "id": "bye",
       "speaker": "Doctor Privacé",
-      "text": "Story <Doctor Privacé & The Secret of Personal Data> complete! Protect your secrets, mon ami!",
+      "text": "Story <Doctor Privacé & The Secret of Personal Data> complete! Keep protecting your secrets, mon ami!",
       "next": "end"
     },
     {
@@ -175,7 +175,7 @@
         "message": "(You got a gleaming blue key.)",
         "limitMessage": "(You already claimed the key.)"
       },
-      "text": "(a new article <Privacy Learn Guide> is available in your Traveler's journal)"
+      "text": "(A new article <Privacy Learn Guide> is now in your Traveler's journal.)"
     }
   ]
 }

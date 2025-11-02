@@ -6,34 +6,34 @@
     {
       "id": "greeting",
       "speaker": "Mentor",
-      "text": "Welcome to Cyber Tower, traveler.",
+      "text": "Welcome to Cyber Tower, friend.",
       "next": "guidance"
     },
     {
       "id": "guidance",
       "speaker": "Mentor",
-      "text": "This Cyber Tower is full of dangers, and you have to use some cool things to protect yourself, like passwords, MFAs, and phishing detectors. Do you know anything about these?",
+      "text": "Cyber Tower has tricky spots, so you’ll need tools like strong passwords, MFA, and scam detectors. Have you heard of those?",
       "options": [
-        { "text": "No, please me everything.", "target": "briefing" },
-        { "text": "Yes, I am ready, just let me go", "target": "skip" }
+        { "text": "No, please tell me everything.", "target": "briefing" },
+        { "text": "Yes, I'm ready. Let me start!", "target": "skip" }
       ]
     },
     {
       "id": "briefing",
       "speaker": "Mentor",
-      "text": "Don't worry, we have amazing trainers to help you learn everything. See these rooms? There's a mentor waiting for you in each room. Go visit them!",
+      "text": "No worries—we have awesome trainers to guide you. See these rooms? Each one has a mentor waiting. Head over and meet them!",
       "next": "farewell"
     },
     {
       "id": "skip",
       "speaker": "Mentor",
-      "text": "Very well. But before you start, you see there are several mentors are waiting for you in these rooms. Go visit them first to obtain the key to the upper levels of the tower!",
+      "text": "Great! Before you dash off, meet the mentors in these rooms. They have what you need to reach the higher floors!",
       "next": "give_key"
     },
     {
       "id": "give_key",
       "speaker": "Mentor",
-      "text": "Very well. Come and take this key. They are waiting for you.",
+      "text": "Here, take this key. The mentors are ready for you.",
       "next": "farewell",
       "events": [
         { "type": "article.unlock", "payload": { "article_id": "welcome" } }
@@ -42,7 +42,7 @@
     {
       "id": "farewell",
       "speaker": "Mentor",
-      "text": "Good luck. The tower is watching.",
+      "text": "Good luck out there. The tower is cheering you on.",
       "reward": {
         "gid": "key_green",
         "amount": 4,

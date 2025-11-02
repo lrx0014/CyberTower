@@ -6,10 +6,10 @@
     {
       "id": "intro",
       "speaker": "Dr. Strong",
-      "text": "Welcome, adventurer! The Cyber Kingdom is threatened by the Hacker Lord! Do you know how to forge a strong password to defend yourself?",
+      "text": "Hi there! I'm Dr. Strong. The Hacker Lord is causing trouble again. Do you know how to build a strong password to stay safe?",
       "options": [
-        { "text": "No… please teach me!", "target": "basics" },
-        { "text": "Yes! I'm confident!", "target": "confidence" }
+        { "text": "No, please teach me!", "target": "basics" },
+        { "text": "Yes, I feel ready!", "target": "confidence" }
       ]
     },
 
@@ -26,28 +26,28 @@
     {
       "id": "bad_guess",
       "speaker": "Hacker Lord",
-      "text": "'Password123'? I cracked it before breakfast! Your shield shatters—better learn from Dr. Strong!",
+      "text": "'Password123'? I cracked that before breakfast! Your shield breaks right away—better learn from Dr. Strong!",
       "next": "basics"
     },
 
     {
       "id": "correct_guess",
       "speaker": "Dr. Strong",
-      "text": "You are right! Weak passwords are easily cracked. But knowledge alone is not enough—let’s forge a truly strong one.",
+      "text": "You're right! Weak passwords break fast. But knowing that isn't enough—let's build a truly strong one.",
       "next": "forge_intro"
     },
 
     {
       "id": "basics",
       "speaker": "Dr. Strong",
-      "text": "A strong password is your magical shield. It should be long—at least 12 characters—and include letters, numbers, and symbols.",
+      "text": "A strong password is your best shield. Make it long—at least 12 characters—and mix letters, numbers, and symbols.",
       "next": "forge_intro"
     },
 
     {
       "id": "forge_intro",
       "speaker": "Dr. Strong",
-      "text": "To create a strong password, you must gather four mystical ingredients: Length, Complexity, Uniqueness, and Secrecy!",
+      "text": "To build a tough password, remember four key ideas: Length, mix of characters, uniqueness, and keeping it secret!",
       "options": [
         { "text": "Tell me more!", "target": "ingredients" },
         { "text": "I'm ready to forge!", "target": "forge" }
@@ -57,14 +57,14 @@
     {
       "id": "ingredients",
       "speaker": "Dr. Strong",
-      "text": "Length makes your shield harder to break. Complexity mixes upper, lower, numbers, and symbols. Uniqueness prevents the same shield from opening every door. And secrecy means never sharing your password… not even with your cat.",
+      "text": "Length makes hackers work harder. Complexity mixes upper and lower letters, numbers, and symbols. Uniqueness means you never reuse it. Secrecy means you don’t share it—even with your cat.",
       "next": "forge"
     },
 
     {
       "id": "forge",
       "speaker": "Dr. Strong",
-      "text": "Which method will you use to forge your password?",
+      "text": "Which method will you use to create your password?",
       "options": [
         { "text": "Use a simple pattern like 'qwerty!!'", "target": "weak_password" },
         { "text": "Use a creative passphrase (e.g., SkyWolf@Runs~Midnight)", "target": "strong_password" },
@@ -75,7 +75,7 @@
     {
       "id": "weak_password",
       "speaker": "Hacker Lord",
-      "text": "Muahaha! I cracked it instantly. You need more power!",
+      "text": "Ha! I cracked that in seconds. You need a better plan!",
       "next": "forge_intro"
     },
 
@@ -89,21 +89,21 @@
     {
       "id": "manager",
       "speaker": "Dr. Strong",
-      "text": "Password managers are reliable spellbooks that store all your passwords safely and even conjure strong ones. Excellent choice!",
+      "text": "Password managers are like super-safe notebooks that store and create strong passwords for you. Great choice!",
       "next": "ending_good"
     },
 
     {
       "id": "ending_good",
       "speaker": "Dr. Strong",
-      "text": "You have forged the Unbreakable Password! The Hacker Lord retreats. Remember: long, complex, unique—and keep it secret!",
+      "text": "You built an unbreakable password! The Hacker Lord runs away. Remember: long, mixed, unique—and kept secret!",
       "next": "bye"
     },
 
     {
       "id": "bye",
       "speaker": "Dr. Strong",
-      "text": "Story <The Quest for the Unbreakable Password> complete! More Cyber adventures await...",
+      "text": "Story <The Quest for the Unbreakable Password> complete! More cyber adventures are waiting for you.",
       "next": "end"
     },
     {
@@ -112,7 +112,7 @@
       "events": [
         { "type": "article.unlock", "payload": { "article_id": "strong_password" } }
       ],
-      "text": "(a new article <Strong Password Learn Guide> is available in your Traveler's journal)"
+      "text": "(A new article <Strong Password Learn Guide> is now in your Traveler's journal.)"
     }
   ]
 }
